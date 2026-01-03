@@ -31,7 +31,8 @@ const protect = async (req, res, next) => {
       });
     }
     
-    if (!req.user.isActive) {
+    // Treat undefined isActive as active (for backward compatibility)
+    if (req.user.isActive === false) {
       return res.status(401).json({
         success: false,
         message: 'Tài khoản đã bị vô hiệu hóa'

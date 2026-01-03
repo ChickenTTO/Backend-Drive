@@ -35,6 +35,10 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Số điện thoại là bắt buộc']
     },
+    isActive: {
+        type: Boolean,
+        default: true
+    },
     createdAt: {
         type: Date,
         default: Date.now

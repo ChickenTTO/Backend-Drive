@@ -10,36 +10,50 @@ const generateToken = (id, role) => {
 
 // @desc    Đăng nhập
 exports.login = async (req, res, next) => {
-    try {
-        const { username, password } = req.body;
+  try {
+    const { username, password } = req.body;
 
-        if (!username || !password) {
-            return res.status(400).json({ success: false, message: 'Vui lòng nhập tên đăng nhập và mật khẩu' });
-        }
-
-        // Lấy password ra để so sánh (vì trong model đã ẩn)
-        const user = await User.findOne({ username }).select('+password');
-
-        if (!user || !(await user.matchPassword(password))) {
-            return res.status(401).json({ success: false, message: 'Tài khoản hoặc mật khẩu không đúng' });
-        }
-
-        const token = generateToken(user._id, user.role);
-
-        res.status(200).json({
-            success: true,
-            token,
-            user: {
-                id: user._id,
-                username: user.username,
-                role: user.role,
-                fullName: user.fullName
-            }
-        });
-    } catch (error) {
-        next(error);
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng nhập tên đăng nhập và mật khẩu'
+      });
     }
+
+    const user = await User.findOne({ username }).select('+password');
+
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({
+        success: false,
+        message: 'Tài khoản hoặc mật khẩu không đúng'
+      });
+    }
+
+    // ✅ FIX TẠI ĐÂY
+    if (user.isActive === false) {
+      return res.status(401).json({
+        success: false,
+        message: 'Tài khoản đã bị vô hiệu hóa'
+      });
+    }
+
+    const token = generateToken(user._id, user.role);
+
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+        fullName: user.fullName
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
 };
+
 
 // @desc    Đăng ký (Dùng để tạo user test nhanh)
 exports.register = async (req, res, next) => {
@@ -71,6 +85,20 @@ exports.register = async (req, res, next) => {
                 role: user.role
             }
         });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Lấy thông tin profile của user hiện tại
+exports.profile = async (req, res, next) => {
+    try {
+        // `protect` middleware đã gắn `req.user` (không chứa password)
+        if (!req.user) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng' });
+        }
+
+        res.status(200).json({ success: true, user: req.user });
     } catch (error) {
         next(error);
     }

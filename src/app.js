@@ -12,6 +12,8 @@ const handoverRoutes = require('./routes/handover.routes');
 const transactionRoutes = require('./routes/transaction.routes');
 const customerRoutes = require('./routes/customer.routes');
 const reportRoutes = require('./routes/report.routes');
+const bookingRoutes = require('./routes/booking.routes');
+const adminRoutes = require('./routes/admin.routes');
 
 const app = express();
 
@@ -30,6 +32,8 @@ app.use('/api/handovers', handoverRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Root route
 app.get('/', (req, res) => {
