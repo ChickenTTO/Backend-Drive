@@ -9,6 +9,14 @@ const {
 const { protect } = require('../middleware/auth');
 const { authorize } = require('../middleware/rbac');
 const { USER_ROLES } = require('../utils/constants');
+const { createCustomer } = require('../controllers/customer.controller');
+
+router.post(
+  '/',
+  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
+  createCustomer
+);
+
 
 router.use(protect);
 

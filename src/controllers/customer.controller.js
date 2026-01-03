@@ -150,3 +150,36 @@ exports.updateCustomer = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Tạo khách hàng mới
+// @route   POST /api/customers
+// @access  Private (Admin, Dispatcher)
+exports.createCustomer = async (req, res, next) => {
+  try {
+    const { name, phone, email, address, notes, isVIP } = req.body;
+
+    // Kiểm tra SĐT đã tồn tại chưa
+    const existingCustomer = await Customer.findOne({ phone });
+    if (existingCustomer) {
+      return res.status(400).json({
+        success: false,
+        message: 'Số điện thoại này đã tồn tại'
+      });
+    }
+
+    const newCustomer = new Customer({
+      name,
+      phone,
+      email,
+      address,
+      notes,
+      isVIP: isVIP || false
+    });
+
+    await newCustomer.save();
+
+    res.status(201).json(newCustomer);
+  } catch (error) {
+    next(error);
+  }
+};
