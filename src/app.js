@@ -42,4 +42,4 @@ app.use((err, req, res, next) => {
     res.status(500).send('Something broke!');
 });
 
-module.exports = app; // Xuất app ra để server.js dùng
+module.exports = app; 
