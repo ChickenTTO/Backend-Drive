@@ -46,4 +46,8 @@ app.use((err, req, res, next) => {
     res.status(500).send('Something broke!');
 });
 
+const assignmentRoutes = require("./routes/assignment.routes");
+app.use("/api/assignments", assignmentRoutes);
+
+
 module.exports = app; 
