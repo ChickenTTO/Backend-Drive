@@ -1,14 +1,6 @@
 require('dotenv').config();
-const app = require('./src/app');
+const app = require('./src/app'); // Lấy app đã cấu hình từ file trên
 const connectDB = require('./src/config/database');
-
-const cors = require('cors'); // Import thư viện
-const express = require('express');
-const app = express();
-
-app.use(cors()); 
-
-app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 

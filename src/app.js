@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-// const morgan = require('morgan'); // Bỏ comment nếu muốn log request
 require('dotenv').config();
 
 // Import Routes
@@ -16,13 +15,10 @@ const reportRoutes = require('./routes/report.routes');
 
 const app = express();
 
-// --- MIDDLEWARE (Phần quan trọng để sửa lỗi) ---
+// --- MIDDLEWARE ---
 app.use(helmet());
-app.use(cors());
-
-// Dòng này giúp server đọc được req.body (JSON)
+app.use(cors()); // CORS đặt ở đây là chuẩn nhất
 app.use(express.json()); 
-// Dòng này giúp đọc dữ liệu từ form (nếu cần)
 app.use(express.urlencoded({ extended: true })); 
 
 // --- ROUTES ---
@@ -40,10 +36,10 @@ app.get('/', (req, res) => {
     res.send('Taxi Management System API is running...');
 });
 
-// Middleware xử lý lỗi (Optional nhưng nên có)
+// Middleware xử lý lỗi
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send('Something broke!');
 });
 
-module.exports = app;
+module.exports = app; // Xuất app ra để server.js dùng
