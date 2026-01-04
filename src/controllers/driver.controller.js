@@ -59,7 +59,7 @@ exports.getDrivers = async (req, res, next) => {
 // --- Tạo mới tài xế ---
 exports.createDriver = async (req, res, next) => {
   try {
-    const { fullName, phone, password, email, address, driverLicense, licenseExpiry } = req.body;
+    const { fullName, phone, username, password, email, address, driverLicense, licenseExpiry } = req.body;
 
     // Kiểm tra trùng số điện thoại
     const userExists = await User.findOne({ phone });
@@ -70,6 +70,7 @@ exports.createDriver = async (req, res, next) => {
     const driver = await User.create({
       fullName,
       phone,
+      username: username || phone, // tự gán username = phone nếu FE không gửi
       password: password || '123456',
       email,
       address,
@@ -87,7 +88,8 @@ exports.createDriver = async (req, res, next) => {
         fullName: driver.fullName,
         phone: driver.phone,
         email: driver.email,
-        role: driver.role
+        role: driver.role,
+        username: driver.username
       }
     });
   } catch (error) {
@@ -143,6 +145,9 @@ exports.updateDriver = async (req, res, next) => {
 
     const updates = {};
     allowedUpdates.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+
+    // luôn gán username = phone nếu chưa có
+    if (req.body.phone && !req.body.username) updates.username = req.body.phone;
 
     const driver = await User.findOneAndUpdate(
       { _id: req.params.id, role: USER_ROLES.DRIVER },
