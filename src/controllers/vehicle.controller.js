@@ -1,205 +1,230 @@
-import React, { useState, useEffect } from 'react';
-import './VehicleList.css';
-import { StatusIcon, LoadingSpinner, XIcon } from '../../components/icons';
-import vehicleApi from '../../api/vehicleApi';
+const Vehicle = require('../models/Vehicle');
+const Trip = require('../models/Trip');
+const { VEHICLE_STATUS } = require('../utils/constants');
 
-// --- Modal Thêm/Sửa Xe ---
-const VehicleModal = ({ isOpen, onClose, vehicle, onSave }) => {
-  const [form, setForm] = useState({
-    licensePlate: '',
-    type: '',
-    seats: 4,
-    status: 'available',
-    imageUrl: ''
-  });
-  const [loading, setLoading] = useState(false);
+// =======================
+// TẠO XE
+// POST /api/vehicles
+// =======================
+exports.createVehicle = async (req, res, next) => {
+  try {
+    const vehicle = await Vehicle.create(req.body);
 
-  useEffect(() => {
-    if (vehicle) setForm(vehicle);
-    else setForm({ licensePlate: '', type: '', seats: 4, status: 'available', imageUrl: '' });
-  }, [vehicle]);
+    res.status(201).json({
+      success: true,
+      message: 'Tạo xe thành công',
+      data: vehicle
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      let res;
-      if (vehicle) res = await vehicleApi.update(vehicle.id, form);
-      else res = await vehicleApi.create(form);
+// =======================
+// LẤY DANH SÁCH XE
+// GET /api/vehicles
+// =======================
+exports.getVehicles = async (req, res, next) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
 
-      onSave(res.data);
-      onClose();
-    } catch (err) {
-      alert('Lưu xe thất bại');
-      console.error(err);
-    } finally {
-      setLoading(false);
+    const query = { isActive: true };
+    if (status) query.status = status;
+
+    const skip = (page - 1) * limit;
+    const total = await Vehicle.countDocuments(query);
+
+    const vehicles = await Vehicle.find(query)
+      .populate('currentDriver', 'fullName phone')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    res.json({
+      success: true,
+      data: vehicles,
+      pagination: {
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// =======================
+// CHI TIẾT XE
+// GET /api/vehicles/:id
+// =======================
+exports.getVehicleById = async (req, res, next) => {
+  try {
+    const vehicle = await Vehicle.findById(req.params.id)
+      .populate('currentDriver', 'fullName phone email');
+
+    if (!vehicle) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy xe'
+      });
     }
-  };
 
-  if (!isOpen) return null;
-
-  return (
-    <div className="modal-overlay">
-      <div className="modal-box">
-        <div className="modal-header">
-          <h3>{vehicle ? 'Sửa xe' : 'Thêm xe mới'}</h3>
-          <button onClick={onClose}><XIcon /></button>
-        </div>
-        <div className="modal-body">
-          <label>Biển số</label>
-          <input value={form.licensePlate} onChange={e => setForm({...form, licensePlate: e.target.value})} />
-          <label>Loại xe</label>
-          <input value={form.type} onChange={e => setForm({...form, type: e.target.value})} />
-          <label>Số ghế</label>
-          <input type="number" value={form.seats} onChange={e => setForm({...form, seats: parseInt(e.target.value)||4})} />
-          <label>Ảnh</label>
-          <input value={form.imageUrl} onChange={e => setForm({...form, imageUrl: e.target.value})} />
-        </div>
-        <div className="modal-footer">
-          <button onClick={onClose} className="btn-secondary">Hủy</button>
-          <button onClick={handleSubmit} className="btn-primary" disabled={loading}>
-            {loading ? 'Đang lưu...' : 'Lưu'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+    res.json({
+      success: true,
+      data: vehicle
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-// --- Modal Xóa ---
-const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, vehicle, loading }) => {
-  if (!isOpen) return null;
-  return (
-    <div className="modal-overlay">
-      <div className="modal-box">
-        <div className="modal-header">
-          <h3>Xác nhận xóa xe</h3>
-          <button onClick={onClose}><XIcon /></button>
-        </div>
-        <div className="modal-body">
-          <p>Bạn có chắc muốn xóa xe {vehicle?.licensePlate} không?</p>
-        </div>
-        <div className="modal-footer">
-          <button onClick={onClose} className="btn-secondary">Hủy</button>
-          <button onClick={onConfirm} className="btn-primary" disabled={loading}>
-            {loading ? 'Đang xóa...' : 'Xóa'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+// =======================
+// CẬP NHẬT XE
+// PUT /api/vehicles/:id
+// =======================
+exports.updateVehicle = async (req, res, next) => {
+  try {
+    const vehicle = await Vehicle.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
 
-// --- Giữ nguyên modal Bảo dưỡng và Doanh thu ---
-import { VehicleStatsModal, MaintenanceModal } from './VehicleModals';
-
-// --- Main Component ---
-const VehicleList = ({ onViewOnMap }) => {
-  const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-
-  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
-  const [isMaintenanceOpen, setIsMaintenanceOpen] = useState(false);
-
-  const fetchVehicles = async () => {
-    setLoading(true);
-    try {
-      const res = await vehicleApi.getAll();
-      setVehicles(res.data || []);
-    } catch (err) {
-      console.error('Lấy danh sách xe thất bại', err);
-    } finally {
-      setLoading(false);
+    if (!vehicle) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy xe'
+      });
     }
-  };
 
-  useEffect(() => { fetchVehicles(); }, []);
-
-  const handleDelete = async () => {
-    if (!selectedVehicle) return;
-    setDeleting(true);
-    try {
-      await vehicleApi.delete(selectedVehicle.id);
-      setVehicles(prev => prev.filter(v => v.id !== selectedVehicle.id));
-      setDeleteOpen(false);
-    } catch (err) {
-      alert('Xóa thất bại');
-    } finally { setDeleting(false); }
-  };
-
-  return (
-    <div className="vehicle-page">
-      {/* Thêm/Sửa xe */}
-      <VehicleModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        vehicle={selectedVehicle}
-        onSave={(v) => {
-          if (selectedVehicle) setVehicles(prev => prev.map(x => x.id === v.id ? v : x));
-          else setVehicles(prev => [v, ...prev]);
-        }}
-      />
-
-      {/* Xóa xe */}
-      <DeleteConfirmModal
-        isOpen={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onConfirm={handleDelete}
-        vehicle={selectedVehicle}
-        loading={deleting}
-      />
-
-      {/* Bảo dưỡng & Doanh thu */}
-      <VehicleStatsModal
-        isOpen={isStatsModalOpen}
-        onClose={() => setIsStatsModalOpen(false)}
-        vehicle={selectedVehicle}
-      />
-      <MaintenanceModal
-        isOpen={isMaintenanceOpen}
-        onClose={() => setIsMaintenanceOpen(false)}
-        vehicleId={selectedVehicle?.id}
-        onSave={(record) => {
-          setVehicles(prev => prev.map(v => v.id === selectedVehicle.id ? {...v, maintenanceHistory: [record, ...(v.maintenanceHistory||[])]} : v));
-        }}
-      />
-
-      <div className="page-header">
-        <h2>Quản lý Xe công ty</h2>
-        <button className="btn-primary" onClick={() => { setSelectedVehicle(null); setModalOpen(true); }}>
-          Thêm xe
-        </button>
-      </div>
-
-      {loading ? <LoadingSpinner /> : (
-        <div className="vehicle-grid">
-          {vehicles.map(vehicle => (
-            <div key={vehicle.id} className="vehicle-card">
-              <img src={vehicle.imageUrl || 'https://via.placeholder.com/400x300'} alt={vehicle.type} />
-              <h3>{vehicle.licensePlate}</h3>
-              <p>{vehicle.type} - {vehicle.seats} ghế</p>
-              <div className="vehicle-status">
-                <StatusIcon status={vehicle.status} />
-                <span>{vehicle.status}</span>
-              </div>
-              <div className="vehicle-actions">
-                <button onClick={() => { setSelectedVehicle(vehicle); setModalOpen(true); }}>Sửa</button>
-                <button onClick={() => { setSelectedVehicle(vehicle); setDeleteOpen(true); }}>Xóa</button>
-                <button onClick={() => { setSelectedVehicle(vehicle); setIsMaintenanceOpen(true); }}>Bảo dưỡng</button>
-                <button onClick={() => { setSelectedVehicle(vehicle); setIsStatsModalOpen(true); }}>Doanh thu</button>
-                <button onClick={() => onViewOnMap(vehicle.id)}>Vị trí</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+    res.json({
+      success: true,
+      message: 'Cập nhật xe thành công',
+      data: vehicle
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export default VehicleList;
+// =======================
+// THÊM BẢO DƯỠNG
+// POST /api/vehicles/:id/maintenance
+// =======================
+exports.addMaintenance = async (req, res, next) => {
+  try {
+    const vehicle = await Vehicle.findById(req.params.id);
+
+    if (!vehicle) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy xe'
+      });
+    }
+
+    vehicle.maintenanceHistory.push(req.body);
+    await vehicle.save();
+
+    res.json({
+      success: true,
+      message: 'Thêm lịch sử bảo dưỡng thành công',
+      data: vehicle
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// =======================
+// LẤY LỊCH SỬ BẢO DƯỠNG
+// GET /api/vehicles/:id/maintenance
+// =======================
+exports.getMaintenanceHistory = async (req, res, next) => {
+  try {
+    const vehicle = await Vehicle.findById(req.params.id);
+
+    if (!vehicle) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy xe'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: vehicle.maintenanceHistory
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// =======================
+// DOANH THU XE
+// GET /api/vehicles/:id/revenue
+// =======================
+exports.getVehicleRevenue = async (req, res, next) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const filter = {
+      vehicle: req.params.id,
+      status: 'completed'
+    };
+
+    if (startDate || endDate) {
+      filter.completedTime = {};
+      if (startDate) filter.completedTime.$gte = new Date(startDate);
+      if (endDate) filter.completedTime.$lte = new Date(endDate);
+    }
+
+    const trips = await Trip.find(filter)
+      .select('tripCode finalPrice completedTime distance')
+      .sort({ completedTime: -1 });
+
+    const totalRevenue = trips.reduce((sum, t) => sum + (t.finalPrice || 0), 0);
+    const totalTrips = trips.length;
+    const totalDistance = trips.reduce((sum, t) => sum + (t.distance || 0), 0);
+
+    res.json({
+      success: true,
+      data: {
+        totalRevenue,
+        totalTrips,
+        totalDistance,
+        trips
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// =======================
+// XÓA XE (SOFT DELETE)
+// DELETE /api/vehicles/:id
+// =======================
+exports.deleteVehicle = async (req, res, next) => {
+  try {
+    const vehicle = await Vehicle.findById(req.params.id);
+
+    if (!vehicle) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy xe'
+      });
+    }
+
+    vehicle.isActive = false;
+    vehicle.status = VEHICLE_STATUS.INACTIVE;
+    await vehicle.save();
+
+    res.json({
+      success: true,
+      message: 'Xóa xe thành công'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
