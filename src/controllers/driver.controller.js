@@ -56,23 +56,17 @@ exports.getDrivers = async (req, res, next) => {
   }
 };
 
-// --- Tạo mới tài xế ---
+// --- Tạo mới tài xế (bỏ tất cả kiểm tra trùng) ---
 exports.createDriver = async (req, res, next) => {
   try {
     const { fullName, phone, username, password, email, address, driverLicense, licenseExpiry } = req.body;
-
-    // Kiểm tra trùng số điện thoại
-    const userExists = await User.findOne({ phone });
-    if (userExists) {
-      return res.status(400).json({ success: false, message: 'Số điện thoại này đã được đăng ký trong hệ thống' });
-    }
 
     const driver = await User.create({
       fullName,
       phone,
       username: username || phone, // tự gán username = phone nếu FE không gửi
       password: password || '123456',
-      email,
+      email, // không cần check trùng
       address,
       role: USER_ROLES.DRIVER,
       driverLicense,
