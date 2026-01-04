@@ -22,9 +22,10 @@ const app = express();
 app.use(helmet());
 
 const allowedOrigins = [
-    'http://localhost:5173', // dev local
+    'http://localhost:5173',
     'https://driver-git-main-chickenttos-projects.vercel.app',
-    'https://drive-git-main-chickenttos-projects.vercel.app'
+    'https://drive-git-main-chickenttos-projects.vercel.app',
+    'https://driver-kappa-eight.vercel.app'
 ];
 
 app.use(cors({
