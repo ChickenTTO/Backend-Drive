@@ -1,43 +1,60 @@
-const mongoose = require('mongoose');
+// @desc    Tạo xe mới
+// @route   POST /api/vehicles
+// @access  Private (Admin)
+exports.createVehicle = async (req, res, next) => {
+  try {
+    const { licensePlate, brand, model, year, seats, color, status } = req.body;
 
-const VehicleSchema = new mongoose.Schema({
-    licensePlate: {
-        type: String,
-        required: [true, 'Biển số xe là bắt buộc'],
-        unique: true,
-        trim: true
-    },
-    brand: {
-        type: String, // Ví dụ: Toyota, Hyundai
-        required: [true, 'Hãng xe là bắt buộc']
-    },
-    model: {
-        type: String, // Ví dụ: Vios, Accent
-        required: [true, 'Model xe là bắt buộc']
-    },
-    year: {
-        type: Number,
-        required: [true, 'Năm sản xuất là bắt buộc']
-    },
-    seats: {
-        type: Number,
-        required: [true, 'Số chỗ ngồi là bắt buộc'],
-        min: 4
-    },
-    color: {
-        type: String,
-        default: 'Trắng'
-    },
-    status: {
-        type: String,
-        enum: ['active', 'maintenance', 'rented'],
-        default: 'active'
-    },
-    currentDriver: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        default: null
+    // Check required fields
+    if (!licensePlate || !brand || !model || !year || !seats) {
+      return res.status(400).json({
+        success: false,
+        message: 'Thiếu trường bắt buộc: licensePlate, brand, model, year, seats'
+      });
     }
-}, { timestamps: true });
 
-module.exports = mongoose.model('Vehicle', VehicleSchema);
+    const vehicle = await Vehicle.create({ licensePlate, brand, model, year, seats, color, status });
+
+    res.status(201).json({
+      success: true,
+      message: 'Tạo xe thành công',
+      data: vehicle
+    });
+  } catch (error) {
+    if (error.code === 11000) { // duplicate key
+      return res.status(400).json({ success: false, message: 'Biển số xe đã tồn tại' });
+    }
+    next(error);
+  }
+};
+
+// @desc    Cập nhật thông tin xe
+// @route   PUT /api/vehicles/:id
+// @access  Private (Admin, Dispatcher)
+exports.updateVehicle = async (req, res, next) => {
+  try {
+    const vehicle = await Vehicle.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!vehicle) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy xe'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Cập nhật xe thành công',
+      data: vehicle
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ success: false, message: 'Biển số xe đã tồn tại' });
+    }
+    next(error);
+  }
+};
