@@ -3,20 +3,15 @@ const Vehicle = require('../models/Vehicle');
 const Trip = require('../models/Trip');
 const { USER_ROLES } = require('../utils/constants');
 
-// @desc    Lấy danh sách tài xế
-// @route   GET /api/drivers
-// @access  Private (Admin, Dispatcher)
+// --- Lấy danh sách tài xế ---
 exports.getDrivers = async (req, res, next) => {
   try {
     const { status, search, page = 1, limit = 20 } = req.query;
 
     let query = { role: USER_ROLES.DRIVER };
     
-    if (status === 'active') {
-      query.isActive = true;
-    } else if (status === 'inactive') {
-      query.isActive = false;
-    }
+    if (status === 'active') query.isActive = true;
+    else if (status === 'inactive') query.isActive = false;
 
     if (search) {
       query.$or = [
@@ -35,7 +30,7 @@ exports.getDrivers = async (req, res, next) => {
       .skip(skip)
       .limit(parseInt(limit));
 
-    // Get current vehicle for each driver
+    // Gắn xe hiện tại
     const driversWithVehicle = await Promise.all(
       drivers.map(async (driver) => {
         const vehicle = await Vehicle.findOne({ currentDriver: driver._id })
@@ -61,36 +56,21 @@ exports.getDrivers = async (req, res, next) => {
   }
 };
 
-// @desc    Tạo mới tài xế
-// @route   POST /api/drivers
-// @access  Private (Admin, Dispatcher)
+// --- Tạo mới tài xế ---
 exports.createDriver = async (req, res, next) => {
   try {
-    const { 
-      fullName, 
-      phone, 
-      password, 
-      email, 
-      address, 
-      driverLicense, 
-      licenseExpiry 
-    } = req.body;
+    const { fullName, phone, password, email, address, driverLicense, licenseExpiry } = req.body;
 
-    // 1. Kiểm tra số điện thoại đã tồn tại chưa
+    // Kiểm tra trùng số điện thoại
     const userExists = await User.findOne({ phone });
     if (userExists) {
-      return res.status(400).json({
-        success: false,
-        message: 'Số điện thoại này đã được đăng ký trong hệ thống'
-      });
+      return res.status(400).json({ success: false, message: 'Số điện thoại này đã được đăng ký trong hệ thống' });
     }
 
-    // 2. Tạo tài xế mới (Mặc định role là DRIVER)
-    // Lưu ý: Password nên được hash trong Model User (pre-save hook)
     const driver = await User.create({
       fullName,
       phone,
-      password: password || '123456', // Mật khẩu mặc định nếu không nhập
+      password: password || '123456',
       email,
       address,
       role: USER_ROLES.DRIVER,
@@ -99,51 +79,34 @@ exports.createDriver = async (req, res, next) => {
       isActive: true
     });
 
-    if (driver) {
-      res.status(201).json({
-        success: true,
-        message: 'Thêm tài xế thành công',
-        data: {
-          _id: driver._id,
-          fullName: driver.fullName,
-          phone: driver.phone,
-          email: driver.email,
-          role: driver.role,
-        }
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: 'Dữ liệu tài xế không hợp lệ'
-      });
-    }
+    res.status(201).json({
+      success: true,
+      message: 'Thêm tài xế thành công',
+      data: {
+        _id: driver._id,
+        fullName: driver.fullName,
+        phone: driver.phone,
+        email: driver.email,
+        role: driver.role
+      }
+    });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Lấy chi tiết tài xế
-// @route   GET /api/drivers/:id
-// @access  Private
+// --- Lấy chi tiết tài xế ---
 exports.getDriverById = async (req, res, next) => {
   try {
-    const driver = await User.findOne({ 
-      _id: req.params.id, 
-      role: USER_ROLES.DRIVER 
-    }).select('-password');
+    const driver = await User.findOne({ _id: req.params.id, role: USER_ROLES.DRIVER }).select('-password');
 
     if (!driver) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy tài xế'
-      });
+      return res.status(404).json({ success: false, message: 'Không tìm thấy tài xế' });
     }
 
-    // Get current vehicle
     const currentVehicle = await Vehicle.findOne({ currentDriver: driver._id })
       .select('licensePlate brand model status');
 
-    // Get statistics
     const stats = await Trip.aggregate([
       { $match: { driver: driver._id, status: 'completed' } },
       {
@@ -162,12 +125,7 @@ exports.getDriverById = async (req, res, next) => {
       data: {
         ...driver.toObject(),
         currentVehicle,
-        statistics: stats[0] || {
-          totalTrips: 0,
-          totalRevenue: 0,
-          totalDistance: 0,
-          avgRating: 0
-        }
+        statistics: stats[0] || { totalTrips: 0, totalRevenue: 0, totalDistance: 0, avgRating: 0 }
       }
     });
   } catch (error) {
@@ -175,30 +133,16 @@ exports.getDriverById = async (req, res, next) => {
   }
 };
 
-// @desc    Cập nhật thông tin tài xế
-// @route   PUT /api/drivers/:id
-// @access  Private (Admin, Dispatcher)
+// --- Cập nhật tài xế ---
 exports.updateDriver = async (req, res, next) => {
   try {
     const allowedUpdates = [
-      'fullName',
-      'phone',
-      'email',
-      'driverLicense',
-      'licenseExpiry',
-      'address',
-      'emergencyContact',
-      'salary',
-      'commissionRate',
-      'isActive'
+      'fullName', 'phone', 'email', 'driverLicense', 'licenseExpiry',
+      'address', 'emergencyContact', 'salary', 'commissionRate', 'isActive'
     ];
 
     const updates = {};
-    allowedUpdates.forEach(field => {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
-      }
-    });
+    allowedUpdates.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
 
     const driver = await User.findOneAndUpdate(
       { _id: req.params.id, role: USER_ROLES.DRIVER },
@@ -206,34 +150,21 @@ exports.updateDriver = async (req, res, next) => {
       { new: true, runValidators: true }
     ).select('-password');
 
-    if (!driver) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy tài xế'
-      });
-    }
+    if (!driver) return res.status(404).json({ success: false, message: 'Không tìm thấy tài xế' });
 
-    res.json({
-      success: true,
-      message: 'Cập nhật thông tin tài xế thành công',
-      data: driver
-    });
+    res.json({ success: true, message: 'Cập nhật thông tin tài xế thành công', data: driver });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Lấy lịch sử chuyến đi của tài xế
-// @route   GET /api/drivers/:id/trips
-// @access  Private
+// --- Lấy lịch sử chuyến đi ---
 exports.getDriverTrips = async (req, res, next) => {
   try {
     const { status, startDate, endDate, page = 1, limit = 20 } = req.query;
 
     let query = { driver: req.params.id };
-    
     if (status) query.status = status;
-    
     if (startDate || endDate) {
       query.scheduledTime = {};
       if (startDate) query.scheduledTime.$gte = new Date(startDate);
@@ -250,63 +181,28 @@ exports.getDriverTrips = async (req, res, next) => {
       .skip(skip)
       .limit(parseInt(limit));
 
-    res.json({
-      success: true,
-      data: trips,
-      pagination: {
-        total,
-        page: parseInt(page),
-        pages: Math.ceil(total / limit)
-      }
-    });
+    res.json({ success: true, data: trips, pagination: { total, page: parseInt(page), pages: Math.ceil(total / limit) } });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Vô hiệu hóa tài xế
-// @route   DELETE /api/drivers/:id
-// @access  Private (Admin only)
+// --- Vô hiệu hóa tài xế ---
 exports.deactivateDriver = async (req, res, next) => {
   try {
-    const driver = await User.findOne({ 
-      _id: req.params.id, 
-      role: USER_ROLES.DRIVER 
-    });
+    const driver = await User.findOne({ _id: req.params.id, role: USER_ROLES.DRIVER });
 
-    if (!driver) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy tài xế'
-      });
-    }
+    if (!driver) return res.status(404).json({ success: false, message: 'Không tìm thấy tài xế' });
 
-    // Check if driver has active trips
-    const activeTrips = await Trip.countDocuments({
-      driver: driver._id,
-      status: { $in: ['assigned', 'called', 'picked_up'] }
-    });
-
-    if (activeTrips > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Tài xế đang có chuyến đi đang thực hiện, không thể vô hiệu hóa'
-      });
-    }
+    const activeTrips = await Trip.countDocuments({ driver: driver._id, status: { $in: ['assigned','called','picked_up'] } });
+    if (activeTrips > 0) return res.status(400).json({ success: false, message: 'Tài xế đang có chuyến đi đang thực hiện, không thể vô hiệu hóa' });
 
     driver.isActive = false;
     await driver.save();
 
-    // Remove driver from current vehicle
-    await Vehicle.updateMany(
-      { currentDriver: driver._id },
-      { currentDriver: null }
-    );
+    await Vehicle.updateMany({ currentDriver: driver._id }, { currentDriver: null });
 
-    res.json({
-      success: true,
-      message: 'Vô hiệu hóa tài xế thành công'
-    });
+    res.json({ success: true, message: 'Vô hiệu hóa tài xế thành công' });
   } catch (error) {
     next(error);
   }

@@ -14,12 +14,13 @@ const customerRoutes = require('./routes/customer.routes');
 const reportRoutes = require('./routes/report.routes');
 const bookingRoutes = require('./routes/booking.routes');
 const adminRoutes = require('./routes/admin.routes');
+const assignmentRoutes = require("./routes/assignment.routes");
 
 const app = express();
 
 // --- MIDDLEWARE ---
 app.use(helmet());
-app.use(cors()); // CORS đặt ở đây là chuẩn nhất
+app.use(cors());
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true })); 
 
@@ -34,20 +35,20 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
+app.use("/api/assignments", assignmentRoutes);
 
 // Root route
 app.get('/', (req, res) => {
     res.send('Taxi Management System API is running...');
 });
 
-// Middleware xử lý lỗi
+// --- GLOBAL ERROR HANDLER ---
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).send('Something broke!');
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || 'Internal Server Error'
+    });
 });
 
-const assignmentRoutes = require("./routes/assignment.routes");
-app.use("/api/assignments", assignmentRoutes);
-
-
-module.exports = app; 
+module.exports = app;
