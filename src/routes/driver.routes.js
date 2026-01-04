@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   getDrivers,
   getDriverById,
+  createDriver, // <--- THÊM DÒNG NÀY (Nhớ kiểm tra tên hàm trong controller)
   updateDriver,
   getDriverTrips,
   deactivateDriver
@@ -13,13 +14,23 @@ const { USER_ROLES } = require('../utils/constants');
 
 router.use(protect);
 
-// Admin và Dispatcher
+// --- Admin và Dispatcher ---
+
+// 1. GET: Lấy danh sách
 router.get(
   '/',
   authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
   getDrivers
 );
 
+// 2. POST: Thêm mới tài xế (DÒNG BẠN ĐANG THIẾU)
+router.post(
+  '/',
+  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER), // Phân quyền tùy bạn chọn
+  createDriver 
+);
+
+// --- Các route khác giữ nguyên ---
 router.get(
   '/:id',
   authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),

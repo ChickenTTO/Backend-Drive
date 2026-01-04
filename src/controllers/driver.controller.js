@@ -61,6 +61,67 @@ exports.getDrivers = async (req, res, next) => {
   }
 };
 
+// @desc    Tạo mới tài xế
+// @route   POST /api/drivers
+// @access  Private (Admin, Dispatcher)
+exports.createDriver = async (req, res, next) => {
+  try {
+    const { 
+      fullName, 
+      phone, 
+      password, 
+      email, 
+      address, 
+      driverLicense, 
+      licenseExpiry 
+    } = req.body;
+
+    // 1. Kiểm tra số điện thoại đã tồn tại chưa
+    const userExists = await User.findOne({ phone });
+    if (userExists) {
+      return res.status(400).json({
+        success: false,
+        message: 'Số điện thoại này đã được đăng ký trong hệ thống'
+      });
+    }
+
+    // 2. Tạo tài xế mới (Mặc định role là DRIVER)
+    // Lưu ý: Password nên được hash trong Model User (pre-save hook)
+    const driver = await User.create({
+      fullName,
+      phone,
+      password: password || '123456', // Mật khẩu mặc định nếu không nhập
+      email,
+      address,
+      role: USER_ROLES.DRIVER,
+      driverLicense,
+      licenseExpiry,
+      isActive: true
+    });
+
+    if (driver) {
+      res.status(201).json({
+        success: true,
+        message: 'Thêm tài xế thành công',
+        data: {
+          _id: driver._id,
+          fullName: driver.fullName,
+          phone: driver.phone,
+          email: driver.email,
+          role: driver.role,
+        }
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Dữ liệu tài xế không hợp lệ'
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Lấy chi tiết tài xế
 // @route   GET /api/drivers/:id
 // @access  Private
