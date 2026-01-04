@@ -20,11 +20,27 @@ const app = express();
 
 // --- MIDDLEWARE ---
 app.use(helmet());
+
+const allowedOrigins = [
+    'http://localhost:5173', // dev local
+    'https://driver-git-main-chickenttos-projects.vercel.app',
+    'https://drive-git-main-chickenttos-projects.vercel.app'
+];
+
 app.use(cors({
-    origin: 'https://driver-git-main-chickenttos-projects.vercel.app', // Frontend Vercel
+    origin: function(origin, callback) {
+        // cho phép request không có origin (Postman, curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET','POST','PUT','DELETE','OPTIONS'],
-    credentials: true // nếu dùng cookie/token
+    credentials: true
 }));
+
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true })); 
 
