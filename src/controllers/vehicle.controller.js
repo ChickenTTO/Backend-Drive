@@ -221,7 +221,7 @@ exports.getVehicleRevenue = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.deleteVehicle = async (req, res, next) => {
   try {
-    // CHỐNG SẬP SERVER: Bắt lỗi nếu ID không hợp lệ (nguyên nhân gây sập trong ảnh)
+    // 1. Kiểm tra ID hợp lệ (đã thêm ở bước trước)
     if (!req.params.id || req.params.id === 'undefined') {
       return res.status(400).json({
         success: false,
@@ -229,8 +229,10 @@ exports.deleteVehicle = async (req, res, next) => {
       });
     }
 
-    const vehicle = await Vehicle.findById(req.params.id);
+    // 2. SỬA LỖI TẠI ĐÂY: Dùng findByIdAndDelete để xóa THẬT khỏi database
+    const vehicle = await Vehicle.findByIdAndDelete(req.params.id);
 
+    // Nếu không tìm thấy xe để xóa
     if (!vehicle) {
       return res.status(404).json({
         success: false,
@@ -238,13 +240,10 @@ exports.deleteVehicle = async (req, res, next) => {
       });
     }
 
-    vehicle.isActive = false;
-    vehicle.status = VEHICLE_STATUS.INACTIVE;
-    await vehicle.save();
-
+    // Xóa thành công
     res.json({
       success: true,
-      message: 'Xóa xe thành công'
+      message: 'Đã xóa xe vĩnh viễn khỏi cơ sở dữ liệu'
     });
   } catch (error) {
     next(error);
