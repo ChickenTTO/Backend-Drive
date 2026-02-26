@@ -7,7 +7,14 @@ const { VEHICLE_STATUS } = require('../utils/constants');
 // @access  Private (Admin)
 exports.createVehicle = async (req, res, next) => {
   try {
-    const vehicle = await Vehicle.create(req.body);
+    // SỬA LỖI Ở ĐÂY: Ép định dạng isActive = true mặc định khi tạo mới
+    // Để đảm bảo xe tạo ra sẽ xuất hiện trong hàm getVehicles
+    const newVehicleData = {
+      ...req.body,
+      isActive: true
+    };
+    
+    const vehicle = await Vehicle.create(newVehicleData);
 
     res.status(201).json({
       success: true,
@@ -216,12 +223,12 @@ exports.getVehicleRevenue = async (req, res, next) => {
   }
 };
 
-// @desc    Xóa xe (soft delete)
+// @desc    Xóa xe (Hard delete - Xóa vĩnh viễn)
 // @route   DELETE /api/vehicles/:id
 // @access  Private (Admin only)
 exports.deleteVehicle = async (req, res, next) => {
   try {
-    // 1. Kiểm tra ID hợp lệ (đã thêm ở bước trước)
+    // 1. Kiểm tra ID hợp lệ
     if (!req.params.id || req.params.id === 'undefined') {
       return res.status(400).json({
         success: false,
@@ -229,7 +236,7 @@ exports.deleteVehicle = async (req, res, next) => {
       });
     }
 
-    // 2. SỬA LỖI TẠI ĐÂY: Dùng findByIdAndDelete để xóa THẬT khỏi database
+    // 2. Dùng findByIdAndDelete để xóa THẬT khỏi database
     const vehicle = await Vehicle.findByIdAndDelete(req.params.id);
 
     // Nếu không tìm thấy xe để xóa

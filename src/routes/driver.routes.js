@@ -1,55 +1,52 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const {
   getDrivers,
   getDriverById,
-  createDriver, // <--- THÊM DÒNG NÀY (Nhớ kiểm tra tên hàm trong controller)
+  createDriver,
   updateDriver,
   getDriverTrips,
-  deactivateDriver
-} = require('../controllers/driver.controller');
-const { protect } = require('../middleware/auth');
-const { authorize } = require('../middleware/rbac');
-const { USER_ROLES } = require('../utils/constants');
+  deleteDriver, // <--- ĐÃ SỬA: Đổi từ deactivateDriver thành deleteDriver
+} = require("../controllers/driver.controller");
+const { protect } = require("../middleware/auth");
+const { authorize } = require("../middleware/rbac");
+const { USER_ROLES } = require("../utils/constants");
 
 router.use(protect);
 
 // --- Admin và Dispatcher ---
 
 // 1. GET: Lấy danh sách
-router.get(
-  '/',
-  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
-  getDrivers
-);
+router.get("/", authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER), getDrivers);
 
-// 2. POST: Thêm mới tài xế (DÒNG BẠN ĐANG THIẾU)
+// 2. POST: Thêm mới tài xế
 router.post(
-  '/',
-  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER), // Phân quyền tùy bạn chọn
-  createDriver 
+  "/",
+  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
+  createDriver,
 );
 
 // --- Các route khác giữ nguyên ---
 router.get(
-  '/:id',
+  "/:id",
   authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
-  getDriverById
+  getDriverById,
 );
 
 router.put(
-  '/:id',
+  "/:id",
   authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
-  updateDriver
+  updateDriver,
 );
 
 router.get(
-  '/:id/trips',
+  "/:id/trips",
   authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
-  getDriverTrips
+  getDriverTrips,
 );
 
 // Admin only
-router.delete('/:id', authorize(USER_ROLES.ADMIN), deactivateDriver);
+// ĐÃ SỬA: Thay deactivateDriver bằng deleteDriver để thực hiện xóa vĩnh viễn
+router.delete("/:id", authorize(USER_ROLES.ADMIN), deleteDriver);
 
 module.exports = router;
