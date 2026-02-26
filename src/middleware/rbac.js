@@ -21,15 +21,15 @@ const authorize = (...roles) => {
   };
 };
 
-// Các quyền cụ thể cho từng module
+// Các quyền cụ thể cho từng module (dùng constants thay hardcoded strings)
 const permissions = {
   // Admin: Toàn quyền
-  admin: {
+  [USER_ROLES.ADMIN]: {
     canAccessAll: true
   },
   
   // Dispatcher: Vận hành chuyến đi, quản lý tài xế/xe
-  dispatcher: {
+  [USER_ROLES.DISPATCHER]: {
     trips: ['create', 'read', 'update', 'assign'],
     vehicles: ['read', 'update'],
     drivers: ['read', 'update'],
@@ -40,7 +40,7 @@ const permissions = {
   },
   
   // Driver: Giao nhận xe, báo cáo trạng thái, nộp tiền
-  driver: {
+  [USER_ROLES.DRIVER]: {
     trips: ['read', 'updateStatus'], // Chỉ cập nhật trạng thái chuyến của mình
     handover: ['create', 'read'], // Tạo checklist giao nhận
     transactions: ['create', 'read'], // Nộp tiền
@@ -48,7 +48,7 @@ const permissions = {
   },
   
   // Accountant: Xác nhận tiền, quản lý chi phí
-  accountant: {
+  [USER_ROLES.ACCOUNTANT]: {
     transactions: ['read', 'confirm', 'reject'],
     expenses: ['read', 'approve', 'reject'],
     reports: ['financial', 'revenue', 'expenses']

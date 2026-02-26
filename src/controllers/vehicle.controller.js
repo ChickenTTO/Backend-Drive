@@ -57,6 +57,11 @@ exports.getVehicles = async (req, res, next) => {
 // @access  Private
 exports.getVehicleById = async (req, res, next) => {
   try {
+    // CHỐNG SẬP SERVER: Bắt lỗi nếu ID không hợp lệ
+    if (!req.params.id || req.params.id === 'undefined') {
+      return res.status(400).json({ success: false, message: 'ID xe không hợp lệ' });
+    }
+
     const vehicle = await Vehicle.findById(req.params.id)
       .populate('currentDriver', 'fullName phone email');
 
@@ -81,6 +86,11 @@ exports.getVehicleById = async (req, res, next) => {
 // @access  Private (Admin, Dispatcher)
 exports.updateVehicle = async (req, res, next) => {
   try {
+    // CHỐNG SẬP SERVER: Bắt lỗi nếu ID không hợp lệ
+    if (!req.params.id || req.params.id === 'undefined') {
+      return res.status(400).json({ success: false, message: 'ID xe không hợp lệ' });
+    }
+
     const vehicle = await Vehicle.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -109,6 +119,11 @@ exports.updateVehicle = async (req, res, next) => {
 // @access  Private (Admin, Dispatcher)
 exports.addMaintenance = async (req, res, next) => {
   try {
+    // CHỐNG SẬP SERVER: Bắt lỗi nếu ID không hợp lệ
+    if (!req.params.id || req.params.id === 'undefined') {
+      return res.status(400).json({ success: false, message: 'ID xe không hợp lệ' });
+    }
+
     const vehicle = await Vehicle.findById(req.params.id);
 
     if (!vehicle) {
@@ -136,6 +151,11 @@ exports.addMaintenance = async (req, res, next) => {
 // @access  Private
 exports.getMaintenanceHistory = async (req, res, next) => {
   try {
+    // CHỐNG SẬP SERVER: Bắt lỗi nếu ID không hợp lệ
+    if (!req.params.id || req.params.id === 'undefined') {
+      return res.status(400).json({ success: false, message: 'ID xe không hợp lệ' });
+    }
+
     const vehicle = await Vehicle.findById(req.params.id);
 
     if (!vehicle) {
@@ -159,6 +179,11 @@ exports.getMaintenanceHistory = async (req, res, next) => {
 // @access  Private
 exports.getVehicleRevenue = async (req, res, next) => {
   try {
+    // CHỐNG SẬP SERVER: Bắt lỗi nếu ID không hợp lệ
+    if (!req.params.id || req.params.id === 'undefined') {
+      return res.status(400).json({ success: false, message: 'ID xe không hợp lệ' });
+    }
+
     const { startDate, endDate } = req.query;
 
     let dateFilter = { vehicle: req.params.id, status: 'completed' };
@@ -196,6 +221,14 @@ exports.getVehicleRevenue = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.deleteVehicle = async (req, res, next) => {
   try {
+    // CHỐNG SẬP SERVER: Bắt lỗi nếu ID không hợp lệ (nguyên nhân gây sập trong ảnh)
+    if (!req.params.id || req.params.id === 'undefined') {
+      return res.status(400).json({
+        success: false,
+        message: 'ID xe không hợp lệ để thực hiện chức năng xóa'
+      });
+    }
+
     const vehicle = await Vehicle.findById(req.params.id);
 
     if (!vehicle) {
