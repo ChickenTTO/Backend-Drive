@@ -26,8 +26,12 @@ router.get(
   getUnpaidAmount
 );
 
-// All can view transactions
-router.get('/', getTransactions);
+// All authorized can view transactions
+router.get(
+  '/',
+  authorize(USER_ROLES.ADMIN, USER_ROLES.ACCOUNTANT, USER_ROLES.DRIVER),
+  getTransactions
+);
 
 // Accountant và Admin
 router.patch(

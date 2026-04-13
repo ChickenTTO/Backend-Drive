@@ -25,11 +25,24 @@ router.post(
 );
 
 // Xem danh sách
-router.get('/', getExpenses);
-router.get('/:id', getExpenseById);
+router.get(
+  '/',
+  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER, USER_ROLES.ACCOUNTANT),
+  getExpenses
+);
+
+router.get(
+  '/:id',
+  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER, USER_ROLES.ACCOUNTANT),
+  getExpenseById
+);
 
 // Cập nhật (chỉ người tạo hoặc Admin)
-router.put('/:id', updateExpense);
+router.put(
+  '/:id',
+  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
+  updateExpense
+);
 
 // Kế toán và Admin phê duyệt/từ chối
 router.patch(

@@ -30,7 +30,6 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: function(origin, callback) {
-        // cho phép request không có origin (Postman, curl)
         if (!origin) return callback(null, true);
         if (allowedOrigins.includes(origin)) {
             callback(null, true);
