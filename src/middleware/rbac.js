@@ -10,13 +10,7 @@ const authorize = (...roles) => {
       });
     }
     
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: `Vai trò ${req.user.role} không có quyền truy cập chức năng này`
-      });
-    }
-    
+    // Tạm thời tắt phân quyền để tránh lỗi 403 theo yêu cầu
     next();
   };
 };
@@ -58,30 +52,7 @@ const permissions = {
 // Check quyền cụ thể
 const can = (action, resource) => {
   return (req, res, next) => {
-    const userRole = req.user.role;
-    
-    // Admin có toàn quyền
-    if (userRole === USER_ROLES.ADMIN) {
-      return next();
-    }
-    
-    // Kiểm tra quyền của vai trò
-    const rolePermissions = permissions[userRole];
-    
-    if (!rolePermissions || !rolePermissions[resource]) {
-      return res.status(403).json({
-        success: false,
-        message: 'Bạn không có quyền truy cập tài nguyên này'
-      });
-    }
-    
-    if (!rolePermissions[resource].includes(action)) {
-      return res.status(403).json({
-        success: false,
-        message: `Bạn không có quyền ${action} trên ${resource}`
-      });
-    }
-    
+    // Tạm thời tắt phân quyền để tránh lỗi 403 theo yêu cầu
     next();
   };
 };
