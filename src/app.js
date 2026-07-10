@@ -15,6 +15,7 @@ const reportRoutes = require('./routes/report.routes');
 const bookingRoutes = require('./routes/booking.routes');
 const adminRoutes = require('./routes/admin.routes');
 const assignmentRoutes = require("./routes/assignment.routes");
+const chatRoutes = require("./routes/chat.routes");
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use("/api/assignments", assignmentRoutes);
+app.use("/api/chat", chatRoutes);
 
 // Root route
 app.get('/', (req, res) => {
