@@ -37,6 +37,8 @@ const TripSchema = new mongoose.Schema({
     },
     distance: Number,
     fare: Number,
+    finalPrice: Number,      // Mirror of fare for reports compatibility
+    completedTime: Date,     // Mirror of endTime for reports compatibility
     customerName: String, // Tạm thời để string đơn giản
     customerPhone: String
 }, { timestamps: true });

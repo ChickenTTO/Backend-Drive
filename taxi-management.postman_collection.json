@@ -1,0 +1,881 @@
+{
+	"info": {
+		"_postman_id": "8e4d2bfd-318e-4a81-9b63-efdf5b5e90a5",
+		"name": "Taxi Management System - Giám sát & Quản lý xe",
+		"description": "Bộ sưu tập API Postman phục vụ cho việc chạy và kiểm thử phần Giám sát hoạt động và Quản lý xe trong hệ thống Quản lý Vận tải.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Đăng nhập Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"jwt_token\", jsonData.token);",
+									"    console.log(\"Đã lưu jwt_token Admin vào biến của Collection!\");",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Đăng nhập Driver",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"jwt_token\", jsonData.token);",
+									"    console.log(\"Đã lưu jwt_token Driver vào biến của Collection!\");",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"driver1\",\n    \"password\": \"driver123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy thông tin cá nhân (Profile)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Quản lý Xe (Vehicles)",
+			"item": [
+				{
+					"name": "Lấy danh sách xe",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/vehicles?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "active",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Thêm xe mới (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success && jsonData.data && jsonData.data._id) {",
+									"    pm.collectionVariables.set(\"vehicle_id\", jsonData.data._id);",
+									"    console.log(\"Đã lưu vehicle_id mới vào biến của Collection!\");",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"licensePlate\": \"29A-888.88\",\n    \"brand\": \"Toyota\",\n    \"model\": \"Camry\",\n    \"year\": 2024,\n    \"seats\": 5,\n    \"color\": \"Đen\",\n    \"status\": \"active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/vehicles",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy chi tiết xe",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/vehicles/{{vehicle_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"{{vehicle_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cập nhật xe (Admin & Dispatcher)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"color\": \"Xám titan\",\n    \"status\": \"active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/vehicles/{{vehicle_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"{{vehicle_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Thêm lịch sử bảo dưỡng (Admin & Dispatcher)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"2026-06-17T00:00:00.000Z\",\n    \"type\": \"periodic\",\n    \"description\": \"Thay dầu động cơ định kỳ và vệ sinh lọc gió\",\n    \"cost\": 1200000,\n    \"provider\": \"Toyota Giải Phóng\",\n    \"odometer\": 5000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/vehicles/{{vehicle_id}}/maintenance",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"{{vehicle_id}}",
+								"maintenance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Xem lịch sử bảo dưỡng xe",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/vehicles/{{vehicle_id}}/maintenance",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"{{vehicle_id}}",
+								"maintenance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Xem doanh thu của xe",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/vehicles/{{vehicle_id}}/revenue?startDate=2026-01-01&endDate=2026-12-31",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"{{vehicle_id}}",
+								"revenue"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2026-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-12-31"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Xóa xe (Admin - Hard Delete)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/vehicles/{{vehicle_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"{{vehicle_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Bàn giao xe (Handovers)",
+			"item": [
+				{
+					"name": "Nhận xe - CHECK_IN (Driver)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success && jsonData.data && jsonData.data._id) {",
+									"    pm.collectionVariables.set(\"handover_id\", jsonData.data._id);",
+									"    console.log(\"Đã lưu handover_id mới vào biến của Collection!\");",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"CHECK_IN\",\n    \"vehicleId\": \"{{vehicle_id}}\",\n    \"checklist\": {\n        \"exterior\": {\n            \"bodyCondition\": { \"item\": \"Vỏ xe\", \"status\": \"OK\", \"note\": \"Không trầy xước\" },\n            \"lights\": { \"item\": \"Hệ thống đèn\", \"status\": \"OK\" },\n            \"mirrors\": { \"item\": \"Gương chiếu hậu\", \"status\": \"OK\" },\n            \"tires\": { \"item\": \"Lốp xe\", \"status\": \"OK\" },\n            \"windshield\": { \"item\": \"Kính chắn gió\", \"status\": \"OK\" }\n        },\n        \"interior\": {\n            \"seats\": { \"item\": \"Ghế ngồi\", \"status\": \"OK\" },\n            \"dashboard\": { \"item\": \"Táp lô\", \"status\": \"OK\" },\n            \"airConditioner\": { \"item\": \"Điều hòa\", \"status\": \"OK\" },\n            \"cleanliness\": { \"item\": \"Vệ sinh\", \"status\": \"OK\" }\n        },\n        \"operational\": {\n            \"engine\": { \"item\": \"Động cơ\", \"status\": \"OK\" },\n            \"brakes\": { \"item\": \"Phanh\", \"status\": \"OK\" },\n            \"steering\": { \"item\": \"Vô lăng\", \"status\": \"OK\" },\n            \"transmission\": { \"item\": \"Hộp số\", \"status\": \"OK\" }\n        },\n        \"fuel\": {\n            \"level\": 85\n        },\n        \"odometer\": {\n            \"reading\": 15200\n        }\n    },\n    \"generalNotes\": \"Nhận xe đầu ca sáng, xe sạch sẽ đầy đủ phụ tùng\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/handovers/check-in",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"handovers",
+								"check-in"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Trả xe - CHECK_OUT (Driver)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"CHECK_OUT\",\n    \"vehicleId\": \"{{vehicle_id}}\",\n    \"checklist\": {\n        \"exterior\": {\n            \"bodyCondition\": { \"item\": \"Vỏ xe\", \"status\": \"OK\" },\n            \"lights\": { \"item\": \"Hệ thống đèn\", \"status\": \"OK\" },\n            \"mirrors\": { \"item\": \"Gương chiếu hậu\", \"status\": \"OK\" },\n            \"tires\": { \"item\": \"Lốp xe\", \"status\": \"OK\" },\n            \"windshield\": { \"item\": \"Kính chắn gió\", \"status\": \"OK\" }\n        },\n        \"interior\": {\n            \"seats\": { \"item\": \"Ghế ngồi\", \"status\": \"OK\" },\n            \"dashboard\": { \"item\": \"Táp lô\", \"status\": \"OK\" },\n            \"airConditioner\": { \"item\": \"Điều hòa\", \"status\": \"OK\" },\n            \"cleanliness\": { \"item\": \"Vệ sinh\", \"status\": \"Có vấn đề\", \"note\": \"Sàn xe bám nhiều bùn đất\" }\n        },\n        \"operational\": {\n            \"engine\": { \"item\": \"Động cơ\", \"status\": \"OK\" },\n            \"brakes\": { \"item\": \"Phanh\", \"status\": \"OK\" },\n            \"steering\": { \"item\": \"Vô lăng\", \"status\": \"OK\" },\n            \"transmission\": { \"item\": \"Hộp số\", \"status\": \"OK\" }\n        },\n        \"fuel\": {\n            \"level\": 60\n        },\n        \"odometer\": {\n            \"reading\": 15450\n        }\n    },\n    \"generalNotes\": \"Trả xe cuối ca. Cần vệ sinh lại sàn xe.\",\n    \"issues\": [\n        {\n            \"description\": \"Sàn xe bẩn do trời mưa khách làm bám bùn\",\n            \"severity\": \"Thấp\"\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/handovers/check-out",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"handovers",
+								"check-out"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy danh sách phiếu giao nhận",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/handovers?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"handovers"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "type",
+									"value": "CHECK_IN",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy chi tiết phiếu bàn giao",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/handovers/{{handover_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"handovers",
+								"{{handover_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Xác nhận hoàn thành bàn giao (Admin & Dispatcher)",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/handovers/{{handover_id}}/complete",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"handovers",
+								"{{handover_id}}",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Giám sát hoạt động (Assignments & Trips)",
+			"item": [
+				{
+					"name": "Phân công (Assignments)",
+					"item": [
+						{
+							"name": "Lấy danh sách phân công",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/assignments",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"assignments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Tạo phân công mới",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"id\": \"a123\",\n    \"driverId\": \"driver_id_here\",\n    \"vehicleId\": \"{{vehicle_id}}\",\n    \"shift\": \"Ca sáng\",\n    \"date\": \"2026-06-18\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/assignments",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"assignments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Chỉnh sửa phân công",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"shift\": \"Ca chiều\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/assignments/a123",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"assignments",
+										"a123"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Xóa phân công (Admin only)",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/assignments/a123",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"assignments",
+										"a123"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Đặt chuyến (Bookings/Trips MongoDB)",
+					"item": [
+						{
+							"name": "Lấy danh sách Booking",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/bookings",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"bookings"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Tạo Booking mới (Chuyến đi MongoDB)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"if (jsonData.success && jsonData.data && jsonData.data._id) {",
+											"    pm.collectionVariables.set(\"booking_id\", jsonData.data._id);",
+											"    console.log(\"Đã lưu booking_id mới vào biến của Collection!\");",
+											"}"
+										],
+										"type": "javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"tripCode\": \"TRIP999\",\n    \"driver\": \"660fa1f9b3e1c667104fb123\",\n    \"vehicle\": \"{{vehicle_id}}\",\n    \"startLocation\": \"Hà Nội\",\n    \"endLocation\": \"Bắc Ninh\",\n    \"distance\": 40,\n    \"fare\": 450000,\n    \"customerName\": \"Nguyễn Văn B\",\n    \"customerPhone\": \"0988000222\",\n    \"status\": \"ongoing\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/bookings",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"bookings"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Chi tiết Booking",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/bookings/{{booking_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"bookings",
+										"{{booking_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Cập nhật Booking",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"status\": \"completed\",\n    \"endTime\": \"2026-06-17T23:15:00.000Z\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/bookings/{{booking_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"bookings",
+										"{{booking_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Chuyến đi nhanh (Trips JSON File)",
+					"item": [
+						{
+							"name": "Lấy danh sách Trips",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/trips",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"trips"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Tạo Trip mới",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"if (jsonData.id) {",
+											"    pm.collectionVariables.set(\"trip_id\", jsonData.id);",
+											"    console.log(\"Đã lưu trip_id mới vào biến của Collection!\");",
+											"}"
+										],
+										"type": "javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"customerPhone\": \"0988000111\",\n    \"pickupLocation\": \"Hà Nội\",\n    \"dropoffLocation\": \"Hải Phòng\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/trips",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"trips"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Cập nhật Trip",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"pickupLocation\": \"Hà Nội (Mỹ Đình)\",\n    \"dropoffLocation\": \"Hải Phòng (Đồ Sơn)\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/trips/{{trip_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"trips",
+										"{{trip_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Xóa Trip (Admin only)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trips/{{trip_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"trips",
+								"{{trip_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "vehicle_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "handover_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "booking_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "trip_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

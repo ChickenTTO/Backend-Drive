@@ -26,6 +26,8 @@ exports.getById = async (req, res, next) => {
 // POST /bookings
 exports.create = async (req, res, next) => {
   try {
+    if (req.body.fare !== undefined) req.body.finalPrice = req.body.fare;
+    if (req.body.endTime !== undefined) req.body.completedTime = req.body.endTime;
     const trip = await Trip.create(req.body);
     return res.status(201).json({ success: true, data: trip, message: 'Booking created successfully' });
   } catch (error) {
@@ -37,6 +39,8 @@ exports.create = async (req, res, next) => {
 // PUT /bookings/:id
 exports.update = async (req, res, next) => {
   try {
+    if (req.body.fare !== undefined) req.body.finalPrice = req.body.fare;
+    if (req.body.endTime !== undefined) req.body.completedTime = req.body.endTime;
     const trip = await Trip.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!trip) return res.status(404).json({ success: false, message: 'Booking not found' });
     return res.status(200).json({ success: true, data: trip, message: 'Booking updated successfully' });

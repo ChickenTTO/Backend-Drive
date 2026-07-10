@@ -21,6 +21,14 @@ mongoose.connect(process.env.MONGO_URI)
 // 4. Dữ liệu mẫu
 const users = [
   {
+    username: 'admin',
+    email: 'admin@gmail.com',
+    password: 'admin123',
+    role: 'admin',
+    fullName: 'Admin User',
+    phone: '0901234567'
+  },
+  {
     username: 'adminDat',
     email: 'Dat@gmail.com',
     password: 'Dat@2005',
@@ -29,9 +37,25 @@ const users = [
     phone: '0901234567'
   },
   {
+    username: 'dispatcher1',
+    email: 'dispatcher1@gmail.com',
+    password: 'dispatcher123',
+    role: 'dispatcher',
+    fullName: 'Dispatcher User',
+    phone: '0901234568'
+  },
+  {
+    username: 'accountant1',
+    email: 'accountant1@gmail.com',
+    password: 'accountant123',
+    role: 'accountant',
+    fullName: 'Accountant User',
+    phone: '0901234569'
+  },
+  {
     username: 'driver1',
     email: 'driver1@gmail.com',
-    password: 'password123',
+    password: 'driver123',
     role: 'driver',
     fullName: 'Nguyen Van A',
     phone: '0909888777'

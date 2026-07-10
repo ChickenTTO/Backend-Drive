@@ -10,7 +10,18 @@ const authorize = (...roles) => {
       });
     }
     
-    // Tạm thời tắt phân quyền để tránh lỗi 403 theo yêu cầu
+    // Admin luôn có quyền truy cập
+    if (req.user.role === USER_ROLES.ADMIN) {
+      return next();
+    }
+    
+    if (roles.length > 0 && !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Quyền truy cập bị từ chối cho vai trò: ${req.user.role}`
+      });
+    }
+    
     next();
   };
 };
@@ -52,8 +63,38 @@ const permissions = {
 // Check quyền cụ thể
 const can = (action, resource) => {
   return (req, res, next) => {
-    // Tạm thời tắt phân quyền để tránh lỗi 403 theo yêu cầu
-    next();
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Chưa xác thực người dùng'
+      });
+    }
+
+    const userRole = req.user.role;
+    const rolePermissions = permissions[userRole];
+
+    if (!rolePermissions) {
+      return res.status(403).json({
+        success: false,
+        message: 'Quyền truy cập bị từ chối'
+      });
+    }
+
+    // Admin có toàn quyền
+    if (rolePermissions.canAccessAll) {
+      return next();
+    }
+
+    // Check resource permissions
+    const resourcePermissions = rolePermissions[resource];
+    if (resourcePermissions && resourcePermissions.includes(action)) {
+      return next();
+    }
+
+    return res.status(403).json({
+      success: false,
+      message: 'Quyền truy cập bị từ chối'
+    });
   };
 };
 
