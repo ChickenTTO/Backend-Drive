@@ -4,6 +4,7 @@ const {
   getCustomers,
   getCustomerById,
   getTripsByPhone,
+  createCustomer,
   updateCustomer
 } = require('../controllers/customer.controller');
 const Customer = require('../models/Customer');
@@ -39,14 +40,7 @@ router.get(
 router.post(
   '/',
   authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
-  async (req, res, next) => {
-    try {
-      const newCustomer = await Customer.create(req.body);
-      res.status(201).json(newCustomer);
-    } catch (err) {
-      next(err);
-    }
-  }
+  createCustomer
 );
 
 // Cập nhật khách hàng (Admin, Dispatcher)

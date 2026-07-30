@@ -6,7 +6,7 @@ const { USER_ROLES } = require("../utils/constants");
 // --- Lấy danh sách tài xế ---
 exports.getDrivers = async (req, res, next) => {
   try {
-    const { status, search, page = 1, limit = 20 } = req.query;
+    const { status, search, page = 1, limit = 100 } = req.query;
 
     let query = { role: USER_ROLES.DRIVER };
 

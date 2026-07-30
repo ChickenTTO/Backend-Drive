@@ -1,28 +1,16 @@
 const mongoose = require('mongoose');
 
-const checklistItemSchema = new mongoose.Schema({
-  item: {
-    type: String,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ['OK', 'Có vấn đề', 'Cần bảo dưỡng'],
-    required: true
-  },
-  note: String,
-  photos: [String] // URLs của hình ảnh
-}, { _id: false });
-
-const handoverSchema = new mongoose.Schema({
-  // Loại giao dịch
+const HandoverSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['CHECK_IN', 'CHECK_OUT'],
+    enum: ['CHECK_OUT', 'CHECK_IN'], // CHECK_OUT: Nhận xe đi chuyến, CHECK_IN: Trả xe về bãi
     required: true
   },
-  
-  // Thông tin xe và tài xế
+  trip: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Trip',
+    required: true
+  },
   vehicle: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Vehicle',
@@ -33,122 +21,51 @@ const handoverSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  
-  // Người xác nhận (có thể là dispatcher hoặc admin)
-  confirmedBy: {
+  depot: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Depot',
     required: true
   },
-  
-  // Thời gian
+  barcode: {
+    type: String,
+    required: true
+  },
   handoverTime: {
     type: Date,
-    default: Date.now,
-    required: true
+    default: Date.now
   },
-  
-  // Checklist chi tiết
-  checklist: {
-    // Ngoại thất
-    exterior: {
-      bodyCondition: checklistItemSchema,
-      lights: checklistItemSchema,
-      mirrors: checklistItemSchema,
-      tires: checklistItemSchema,
-      windshield: checklistItemSchema
-    },
-    
-    // Nội thất
-    interior: {
-      seats: checklistItemSchema,
-      dashboard: checklistItemSchema,
-      airConditioner: checklistItemSchema,
-      cleanliness: checklistItemSchema
-    },
-    
-    // Vận hành
-    operational: {
-      engine: checklistItemSchema,
-      brakes: checklistItemSchema,
-      steering: checklistItemSchema,
-      transmission: checklistItemSchema
-    },
-    
-    // Nhiên liệu
-    fuel: {
-      level: {
-        type: Number, // 0-100%
-        required: true,
-        min: 0,
-        max: 100
-      },
-      photo: String
-    },
-    
-    // Đồng hồ km
-    odometer: {
-      reading: {
-        type: Number,
-        required: true,
-        min: 0
-      },
-      photo: String
-    }
+  odometerReading: {
+    type: Number,
+    required: [true, 'Số Km công-tơ-mét là bắt buộc'],
+    min: 0
   },
-  
-  // Hình ảnh tổng quan (4 góc xe)
-  overallPhotos: {
-    front: String,
-    back: String,
-    left: String,
-    right: String,
-    dashboard: String
+  fuelLevelPercent: {
+    type: Number,
+    required: [true, 'Mức nhiên liệu (%) là bắt buộc'],
+    min: 0,
+    max: 100
   },
-  
-  // Ghi chú chung
+  // Hình ảnh minh chứng bắt buộc
+  photos: {
+    cabin: { type: String, required: true },      // Ảnh cabin xe
+    cargoBox: { type: String, required: true },   // Ảnh thùng xe
+    tires: { type: String, required: true },      // Ảnh lốp xe
+    odometer: String,
+    fuelGauge: String
+  },
   generalNotes: String,
-  
-  // Vấn đề cần xử lý
-  issues: [{
-    description: String,
-    severity: {
-      type: String,
-      enum: ['Thấp', 'Trung bình', 'Cao', 'Khẩn cấp']
-    },
-    photos: [String],
-    resolved: {
-      type: Boolean,
-      default: false
-    }
-  }],
-  
-  // Trạng thái hoàn thành
   isCompleted: {
     type: Boolean,
-    default: false
-  },
-  
-  // Chữ ký điện tử
-  signatures: {
-    driver: String, // Base64 hoặc URL
-    confirmer: String
+    default: true
   }
-}, {
-  timestamps: true
-});
+}, { timestamps: true });
 
-// Index
-handoverSchema.index({ vehicle: 1, handoverTime: -1 });
-handoverSchema.index({ driver: 1, handoverTime: -1 });
-handoverSchema.index({ type: 1, handoverTime: -1 });
-
-// Middleware: Không cho sửa sau khi hoàn thành
-handoverSchema.pre('save', function(next) {
+// Lock modification if completed
+HandoverSchema.pre('save', function() {
   if (this.isCompleted && !this.isNew) {
-    return next(new Error('Không thể chỉnh sửa checklist đã hoàn thành'));
+    throw new Error('Biên bản bàn giao điện tử đã khóa, không được chỉnh sửa.');
   }
-  next();
 });
 
-module.exports = mongoose.model('Handover', handoverSchema);
+
+module.exports = mongoose.model('Handover', HandoverSchema);

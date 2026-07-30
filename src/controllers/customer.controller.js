@@ -6,7 +6,7 @@ const Trip = require('../models/Trip');
 // @access  Private
 exports.getCustomers = async (req, res, next) => {
   try {
-    const { search, isVIP, page = 1, limit = 20 } = req.query;
+    const { search, isVIP, page = 1, limit = 50 } = req.query;
 
     let query = {};
     
@@ -25,7 +25,7 @@ exports.getCustomers = async (req, res, next) => {
     const total = await Customer.countDocuments(query);
 
     const customers = await Customer.find(query)
-      .sort('-totalSpent')
+      .sort('-createdAt')
       .skip(skip)
       .limit(parseInt(limit));
 
@@ -121,16 +121,66 @@ exports.getTripsByPhone = async (req, res, next) => {
   }
 };
 
+// @desc    Tạo khách hàng mới
+// @route   POST /api/customers
+// @access  Private (Admin, Dispatcher)
+exports.createCustomer = async (req, res, next) => {
+  try {
+    const { name, phone, email, address, notes, type, isVIP } = req.body;
+
+    if (!phone || !phone.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Số điện thoại khách hàng là bắt buộc'
+      });
+    }
+
+    const cleanPhone = phone.trim();
+
+    // Kiểm tra SĐT đã tồn tại chưa
+    const existingCustomer = await Customer.findOne({ phone: cleanPhone });
+    if (existingCustomer) {
+      return res.status(400).json({
+        success: false,
+        message: `Số điện thoại ${cleanPhone} đã tồn tại trong danh sách khách hàng`
+      });
+    }
+
+    const newCustomer = await Customer.create({
+      name: name ? name.trim() : 'Khách hàng mới',
+      phone: cleanPhone,
+      email: email ? email.trim() : '',
+      address: address ? address.trim() : '',
+      notes: notes ? notes.trim() : '',
+      isVIP: isVIP || type === 'vip' || type === 'corporate'
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Thêm khách hàng mới thành công',
+      data: newCustomer
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Cập nhật thông tin khách hàng
 // @route   PUT /api/customers/:id
 // @access  Private (Admin, Dispatcher)
 exports.updateCustomer = async (req, res, next) => {
   try {
-    const { name, email, address, notes, isVIP } = req.body;
+    const { name, email, address, notes, type, isVIP } = req.body;
 
     const customer = await Customer.findByIdAndUpdate(
       req.params.id,
-      { name, email, address, notes, isVIP },
+      {
+        name,
+        email,
+        address,
+        notes,
+        isVIP: isVIP || type === 'vip' || type === 'corporate'
+      },
       { new: true, runValidators: true }
     );
 
@@ -146,39 +196,6 @@ exports.updateCustomer = async (req, res, next) => {
       message: 'Cập nhật thông tin khách hàng thành công',
       data: customer
     });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Tạo khách hàng mới
-// @route   POST /api/customers
-// @access  Private (Admin, Dispatcher)
-exports.createCustomer = async (req, res, next) => {
-  try {
-    const { name, phone, email, address, notes, isVIP } = req.body;
-
-    // Kiểm tra SĐT đã tồn tại chưa
-    const existingCustomer = await Customer.findOne({ phone });
-    if (existingCustomer) {
-      return res.status(400).json({
-        success: false,
-        message: 'Số điện thoại này đã tồn tại'
-      });
-    }
-
-    const newCustomer = new Customer({
-      name,
-      phone,
-      email,
-      address,
-      notes,
-      isVIP: isVIP || false
-    });
-
-    await newCustomer.save();
-
-    res.status(201).json(newCustomer);
   } catch (error) {
     next(error);
   }

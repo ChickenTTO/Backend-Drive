@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { VEHICLE_STATUS, WEIGHT_CATEGORY } = require('../utils/constants');
 
 const MaintenanceSchema = new mongoose.Schema({
     date: { type: Date, required: true },
@@ -20,31 +21,51 @@ const VehicleSchema = new mongoose.Schema({
         unique: true,
         trim: true
     },
+    barcode: {
+        type: String,
+        required: [true, 'Mã vạch xe là bắt buộc'],
+        unique: true,
+        trim: true
+    },
     brand: {
-        type: String, // Ví dụ: Toyota, Hyundai
+        type: String, // Ví dụ: Hino, Isuzu, Hyundai
         required: [true, 'Hãng xe là bắt buộc']
     },
     model: {
-        type: String, // Ví dụ: Vios, Accent
+        type: String,
         required: [true, 'Model xe là bắt buộc']
     },
     year: {
         type: Number,
         required: [true, 'Năm sản xuất là bắt buộc']
     },
-    seats: {
-        type: Number,
-        required: [true, 'Số chỗ ngồi là bắt buộc'],
-        min: 4
-    },
-    color: {
+    weightCategory: {
         type: String,
-        default: 'Trắng'
+        enum: Object.values(WEIGHT_CATEGORY),
+        required: [true, 'Phân loại tải trọng là bắt buộc']
+    },
+    maxPayloadTon: {
+        type: Number, // Khối lượng chở tối đa (tấn)
+        required: true,
+        default: 3.5
+    },
+    depot: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Depot',
+        required: [true, 'Bãi xe trực thuộc là bắt buộc']
     },
     status: {
         type: String,
-        enum: ['active', 'maintenance', 'rented', 'inactive'],
-        default: 'active'
+        enum: Object.values(VEHICLE_STATUS),
+        default: VEHICLE_STATUS.READY
+    },
+    odometer: {
+        type: Number,
+        default: 0
+    },
+    fuelLevel: {
+        type: Number, // 0 - 100%
+        default: 100
     },
     currentDriver: {
         type: mongoose.Schema.Types.ObjectId,

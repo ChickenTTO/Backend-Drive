@@ -1,89 +1,52 @@
 const mongoose = require('mongoose');
 const { EXPENSE_TYPE, TRANSACTION_STATUS } = require('../utils/constants');
 
-const expenseSchema = new mongoose.Schema({
-  // Loại chi phí
-  type: {
-    type: String,
-    enum: Object.values(EXPENSE_TYPE),
+const ExpenseSchema = new mongoose.Schema({
+  trip: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Trip',
+    required: [true, 'Chuyến đi liên quan là bắt buộc']
+  },
+  vehicle: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Vehicle',
     required: true
   },
-  
-  // Mô tả chi tiết
-  description: {
-    type: String,
-    required: true
-  },
-  
-  // Số tiền
-  amount: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  
-  // Người tạo (có thể là dispatcher hoặc admin)
-  createdBy: {
+  driver: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  
-  // Người phê duyệt (kế toán hoặc admin)
-  approvedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+  type: {
+    type: String,
+    enum: Object.values(EXPENSE_TYPE),
+    required: [true, 'Loại chi phí là bắt buộc']
   },
-  
-  // Trạng thái
+  amount: {
+    type: Number,
+    required: [true, 'Số tiền là bắt buộc'],
+    min: [1000, 'Số tiền tối thiểu 1,000 VND']
+  },
+  description: {
+    type: String,
+    required: [true, 'Mô tả chi phí là bắt buộc']
+  },
+  receiptImage: {
+    type: String,
+    required: [true, 'Hình ảnh hóa đơn/biên lai là bắt buộc']
+  },
   status: {
     type: String,
     enum: Object.values(TRANSACTION_STATUS),
     default: TRANSACTION_STATUS.PENDING
   },
-  
-  // Ngày chi phí
-  expenseDate: {
-    type: Date,
-    required: true,
-    default: Date.now
-  },
-  
-  // Ngày phê duyệt
-  approvedDate: Date,
-  
-  // Xe liên quan (nếu có)
-  vehicle: {
+  approvedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Vehicle'
+    ref: 'User'
   },
-  
-  // Chuyến đi liên quan (nếu có)
-  trip: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Trip'
-  },
-  
-  // File đính kèm (hóa đơn, biên lai, hình ảnh)
-  attachments: [String],
-  
-  // Ghi chú
-  notes: String,
-  
-  // Ghi chú phê duyệt
+  approvalDate: Date,
   approvalNote: String,
-  
-  // Lý do từ chối
   rejectionReason: String
-}, {
-  timestamps: true
-});
+}, { timestamps: true });
 
-// Index
-expenseSchema.index({ type: 1 });
-expenseSchema.index({ status: 1 });
-expenseSchema.index({ expenseDate: -1 });
-expenseSchema.index({ createdBy: 1 });
-expenseSchema.index({ vehicle: 1 });
-
-module.exports = mongoose.model('Expense', expenseSchema);
+module.exports = mongoose.model('Expense', ExpenseSchema);

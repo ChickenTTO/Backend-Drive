@@ -1,63 +1,14 @@
 const express = require('express');
 const router = express.Router();
+const { createExpense, getAllExpenses, approveExpense, rejectExpense } = require('../controllers/expense.controller');
 const { protect } = require('../middleware/auth');
 const { authorize } = require('../middleware/rbac');
-const { USER_ROLES } = require('../utils/constants');
-
-// Import controller (sẽ tạo sau)
-const {
-  createExpense,
-  getExpenses,
-  getExpenseById,
-  updateExpense,
-  approveExpense,
-  rejectExpense,
-  deleteExpense
-} = require('../controllers/expense.controller');
 
 router.use(protect);
 
-// Dispatcher và Admin tạo chi phí
-router.post(
-  '/',
-  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
-  createExpense
-);
-
-// Xem danh sách
-router.get(
-  '/',
-  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER, USER_ROLES.ACCOUNTANT),
-  getExpenses
-);
-
-router.get(
-  '/:id',
-  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER, USER_ROLES.ACCOUNTANT),
-  getExpenseById
-);
-
-// Cập nhật (chỉ người tạo hoặc Admin)
-router.put(
-  '/:id',
-  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
-  updateExpense
-);
-
-// Kế toán và Admin phê duyệt/từ chối
-router.patch(
-  '/:id/approve',
-  authorize(USER_ROLES.ADMIN, USER_ROLES.ACCOUNTANT),
-  approveExpense
-);
-
-router.patch(
-  '/:id/reject',
-  authorize(USER_ROLES.ADMIN, USER_ROLES.ACCOUNTANT),
-  rejectExpense
-);
-
-// Admin xóa
-router.delete('/:id', authorize(USER_ROLES.ADMIN), deleteExpense);
+router.post('/', createExpense);
+router.get('/', getAllExpenses);
+router.put('/:id/approve', authorize('admin', 'accountant'), approveExpense);
+router.put('/:id/reject', authorize('admin', 'accountant'), rejectExpense);
 
 module.exports = router;

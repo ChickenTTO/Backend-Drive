@@ -29,6 +29,18 @@ router.post(
 );
 
 router.put(
+  '/:id/assign',
+  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
+  bookingController.assignDriver
+);
+
+router.put(
+  '/:id/status',
+  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
+  bookingController.updateStatus
+);
+
+router.put(
   '/:id',
   authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
   bookingController.update
