@@ -98,7 +98,7 @@ const seedFutaData = async () => {
         }
         console.log('🏛️ Created 05 Futa Express Depots (HN, HP, DN, HCM, CT)');
 
-        // 4. Create 55 Trucks with Barcodes
+        // 4. Create 55 Trucks with Barcodes & Link Current Drivers
         const brands = ['Hino 300', 'Isuzu NPR', 'Hyundai Mighty', 'Howo A7', 'Chenglong H7'];
         const weightCategories = [
             { category: WEIGHT_CATEGORY.LIGHT, payload: 2.5 },
@@ -120,6 +120,7 @@ const seedFutaData = async () => {
 
                 const weightObj = weightCategories[i % 3];
                 const brand = brands[i % brands.length];
+                const assignedDriver = createdDrivers[(truckCount - 1) % createdDrivers.length];
 
                 const vehicle = await Vehicle.create({
                     licensePlate,
@@ -130,86 +131,152 @@ const seedFutaData = async () => {
                     weightCategory: weightObj.category,
                     maxPayloadTon: weightObj.payload,
                     depot: depot._id,
-                    driver: createdDrivers[i % createdDrivers.length]._id,
-                    status: i === 0 ? VEHICLE_STATUS.OPERATING : VEHICLE_STATUS.READY,
+                    driver: assignedDriver._id,
+                    currentDriver: assignedDriver._id,
+                    status: (i % 5 === 0) ? VEHICLE_STATUS.OPERATING : (i % 7 === 0 ? VEHICLE_STATUS.MAINTENANCE : VEHICLE_STATUS.READY),
                     odometer: 15000 + (truckCount * 320),
-                    fuelLevel: 85 + (i % 15)
+                    fuelLevel: 85 + (i % 15),
+                    fuelLiters: 85 + (i % 15)
                 });
 
                 createdVehicles.push(vehicle);
                 truckCount++;
             }
         }
-        console.log(`🚛 Created ${createdVehicles.length} Trucks with Barcodes spread across 5 Depots.`);
+        console.log(`🚛 Created ${createdVehicles.length} Trucks with Barcodes & assigned drivers spread across 5 Depots.`);
 
-        // 5. Create Sample Active Trip
-        const hcmDepot = createdDepots.find(d => d.code === 'HCM');
-        const dnDepot = createdDepots.find(d => d.code === 'DN');
-        const activeTruck = createdVehicles.find(v => v.status === VEHICLE_STATUS.OPERATING);
+        // 5. Create Real Trips for ALL 25 Drivers
+        const customersList = [
+            { name: "Công ty Lương thực FUTA Agrico", phone: "0908111222" },
+            { name: "Tập đoàn Điện tử Samsung Vina", phone: "0918222333" },
+            { name: "Tổng kho Bưu chính Express TP.HCM", phone: "0938333444" },
+            { name: "Chuỗi Siêu thị Bách Hóa Xanh", phone: "0948444555" },
+            { name: "Công ty Dược phẩm Hậu Giang", phone: "0958555666" },
+            { name: "Cảng Container Tiên Sa Đà Nẵng", phone: "0968666777" },
+            { name: "KCN Đình Vũ Hải Phòng Freight", phone: "0978777888" },
+            { name: "Công ty Nông sản Cần Thơ", phone: "0988888999" }
+        ];
 
-        const sampleTrip = await Trip.create({
-            tripCode: 'FUTA-20260730-9988',
-            cargoType: 'Hàng Linh Kiện Điện Tử & Bưu Chính Express',
-            cargoWeightTon: 6.5,
-            startDepot: hcmDepot._id,
-            endDepot: dnDepot._id,
-            dispatcher: dispatcher._id,
-            driver: createdDrivers[0]._id,
-            vehicle: activeTruck._id,
-            startOdometer: activeTruck.odometer - 120,
-            startFuelLevel: 95,
-            notes: 'Hàng gấp cần vận chuyển an toàn qua QL1A',
-            status: TRIP_STATUS.IN_TRANSIT
-        });
+        const cargoTypes = [
+            "Hàng bưu chính Express & Tiêu dùng",
+            "Linh kiện điện tử & Máy móc nhẹ",
+            "Nông sản & Thực phẩm đông lạnh",
+            "Vận chuyển Container & Hàng nặng",
+            "Dược phẩm & Vật tư y tế"
+        ];
 
-        // 6. Create Check-out Handover
-        await Handover.create({
-            type: 'CHECK_OUT',
-            trip: sampleTrip._id,
-            vehicle: activeTruck._id,
-            driver: createdDrivers[0]._id,
-            depot: hcmDepot._id,
-            barcode: activeTruck.barcode,
-            odometerReading: activeTruck.odometer - 120,
-            fuelLevelPercent: 95,
-            photos: {
-                cabin: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80',
-                cargoBox: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=800&q=80',
-                tires: 'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&w=800&q=80',
-                odometer: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80',
-                fuelGauge: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80'
-            },
-            generalNotes: 'Lốp xe đảm bảo, thùng xe sạch sẽ, đủ kẹp chì Niêm phong Futa Express.',
-            isCompleted: true
-        });
+        let createdTripsCount = 0;
+        const createdTripsList = [];
 
-        // 7. Create Sample Roadside Expense Claims
-        await Expense.create({
-            trip: sampleTrip._id,
-            vehicle: activeTruck._id,
-            driver: createdDrivers[0]._id,
-            type: EXPENSE_TYPE.TOLL_BOT,
-            amount: 180000,
-            description: 'Qua trạm phí BOT Phan Thiết (Xe 7.5 tấn)',
-            receiptImage: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80',
-            status: TRANSACTION_STATUS.PENDING
-        });
+        for (let i = 0; i < createdDrivers.length; i++) {
+            const driver = createdDrivers[i];
+            const assignedVehicle = createdVehicles.find(v => String(v.currentDriver) === String(driver._id)) || createdVehicles[i % createdVehicles.length];
+            const cust = customersList[i % customersList.length];
+            const cargo = cargoTypes[i % cargoTypes.length];
+            const startDepot = createdDepots[i % createdDepots.length];
+            const endDepot = createdDepots[(i + 2) % createdDepots.length];
 
-        await Expense.create({
-            trip: sampleTrip._id,
-            vehicle: activeTruck._id,
-            driver: createdDrivers[0]._id,
-            type: EXPENSE_TYPE.FUEL,
-            amount: 1500000,
-            description: 'Đổ 70 lít dầu Diesel tại cây xăng Petrolimex Bình Thuận',
-            receiptImage: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=800&q=80',
-            status: TRANSACTION_STATUS.APPROVED,
-            approvedBy: accountant._id,
-            approvalDate: new Date(),
-            approvalNote: 'Đã khớp số lít và hóa đơn VAT hợp lệ.'
-        });
+            // Trip 1: Completed trip (to build revenue history)
+            const dateStr = new Date(Date.now() - (i + 1) * 86400000).toISOString().slice(0,10).replace(/-/g,'');
+            const tripCode1 = `FUTA-${dateStr}-${1000 + i}`;
+            const fare1 = 4500000 + (i * 350000);
 
-        console.log('✅ Seeding completed successfully!');
+            const trip1 = await Trip.create({
+                tripCode: tripCode1,
+                cargoType: cargo,
+                cargoWeightTon: 3.5 + (i % 5),
+                startDepot: startDepot._id,
+                endDepot: endDepot._id,
+                startLocation: startDepot.name,
+                endLocation: endDepot.name,
+                customerName: cust.name,
+                customerPhone: cust.phone,
+                fare: fare1,
+                distance: 120 + (i * 25),
+                dispatcher: dispatcher._id,
+                driver: driver._id,
+                vehicle: assignedVehicle._id,
+                startTime: new Date(Date.now() - (i + 2) * 86400000),
+                endTime: new Date(Date.now() - (i + 1) * 86400000),
+                startOdometer: assignedVehicle.odometer - 200,
+                endOdometer: assignedVehicle.odometer,
+                status: 'completed',
+                notes: 'Giao hàng đúng giờ, hàng hóa nguyên vẹn'
+            });
+            createdTripsCount++;
+            createdTripsList.push(trip1);
+
+            // Trip 2: Active or Pending Trip for recent operations
+            if (i % 2 === 0) {
+                const tripCode2 = `FUTA-ACTIVE-${2000 + i}`;
+                const trip2 = await Trip.create({
+                    tripCode: tripCode2,
+                    cargoType: cargoTypes[(i + 1) % cargoTypes.length],
+                    cargoWeightTon: 4.0 + (i % 6),
+                    startDepot: startDepot._id,
+                    endDepot: endDepot._id,
+                    startLocation: startDepot.name,
+                    endLocation: endDepot.name,
+                    customerName: cust.name,
+                    customerPhone: cust.phone,
+                    fare: fare1 + 1200000,
+                    distance: 180 + (i * 15),
+                    dispatcher: dispatcher._id,
+                    driver: driver._id,
+                    vehicle: assignedVehicle._id,
+                    startTime: new Date(),
+                    status: 'Đang vận hành',
+                    notes: 'Chuyến xe đang lưu thông trên hành trình'
+                });
+                createdTripsCount++;
+                createdTripsList.push(trip2);
+            }
+        }
+        console.log(`📦 Created ${createdTripsCount} Real Trips for all 25 drivers.`);
+
+        // 6. Create Check-out Handovers
+        for (let i = 0; i < 10; i++) {
+            const driver = createdDrivers[i];
+            const vehicle = createdVehicles[i];
+            const trip = createdTripsList[i % createdTripsList.length];
+            await Handover.create({
+                type: 'CHECK_OUT',
+                trip: trip._id,
+                vehicle: vehicle._id,
+                driver: driver._id,
+                depot: vehicle.depot,
+                barcode: vehicle.barcode,
+                odometerReading: vehicle.odometer,
+                fuelLevelPercent: 90,
+                photos: {
+                    cabin: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80',
+                    cargoBox: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=800&q=80',
+                    tires: 'https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&w=800&q=80'
+                },
+                generalNotes: `Đã bàn giao xe ${vehicle.licensePlate} cho tài xế ${driver.fullName}`,
+                isCompleted: true
+            });
+        }
+
+        // 7. Create Sample Roadside Expense Claims for drivers
+        for (let i = 0; i < 8; i++) {
+            const driver = createdDrivers[i];
+            const vehicle = createdVehicles[i];
+            const trip = createdTripsList[i % createdTripsList.length];
+            await Expense.create({
+                trip: trip._id,
+                vehicle: vehicle._id,
+                driver: driver._id,
+                type: EXPENSE_TYPE.TOLL_BOT,
+                amount: 150000 + (i * 30000),
+                description: `Trạm thu phí BOT cho xe ${vehicle.licensePlate}`,
+                receiptImage: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80',
+                status: i % 2 === 0 ? TRANSACTION_STATUS.APPROVED : TRANSACTION_STATUS.PENDING,
+                approvedBy: i % 2 === 0 ? accountant._id : null
+            });
+        }
+
+        console.log('✅ Seeding completed successfully for all 25 drivers!');
         process.exit(0);
     } catch (error) {
         console.error('❌ Seeding failed:', error);
@@ -218,3 +285,5 @@ const seedFutaData = async () => {
 };
 
 seedFutaData();
+
+
