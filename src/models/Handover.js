@@ -39,11 +39,13 @@ const HandoverSchema = new mongoose.Schema({
     required: [true, 'Số Km công-tơ-mét là bắt buộc'],
     min: 0
   },
+  fuelLiters: {
+    type: Number,
+    min: 0
+  },
   fuelLevelPercent: {
     type: Number,
-    required: [true, 'Mức nhiên liệu (%) là bắt buộc'],
-    min: 0,
-    max: 100
+    min: 0
   },
   // Hình ảnh minh chứng bắt buộc
   photos: {

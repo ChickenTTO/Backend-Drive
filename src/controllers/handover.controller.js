@@ -13,10 +13,13 @@ exports.createHandover = async (req, res, next) => {
             tripId,
             barcode,
             odometerReading,
+            fuelLiters,
             fuelLevelPercent,
             photos, // { cabin, cargoBox, tires, odometer, fuelGauge }
             generalNotes
         } = req.body;
+
+        const actualFuelLiters = fuelLiters !== undefined ? Number(fuelLiters) : Number(fuelLevelPercent || 0);
 
         if (!type || !['CHECK_OUT', 'CHECK_IN'].includes(type)) {
             return res.status(400).json({ success: false, message: 'Loại biên bản bàn giao (CHECK_OUT / CHECK_IN) là bắt buộc' });
@@ -59,7 +62,8 @@ exports.createHandover = async (req, res, next) => {
             depot: depotId,
             barcode: barcode.toUpperCase().trim(),
             odometerReading: Number(odometerReading),
-            fuelLevelPercent: Number(fuelLevelPercent),
+            fuelLiters: actualFuelLiters,
+            fuelLevelPercent: actualFuelLiters,
             photos: {
                 cabin: photos.cabin,
                 cargoBox: photos.cargoBox,
@@ -77,12 +81,13 @@ exports.createHandover = async (req, res, next) => {
             vehicle.status = VEHICLE_STATUS.OPERATING;
             vehicle.currentDriver = req.user._id;
             vehicle.odometer = Number(odometerReading);
-            vehicle.fuelLevel = Number(fuelLevelPercent);
+            vehicle.fuelLevel = actualFuelLiters;
+            vehicle.fuelLiters = actualFuelLiters;
             await vehicle.save();
 
             trip.status = TRIP_STATUS.IN_TRANSIT;
             trip.startOdometer = Number(odometerReading);
-            trip.startFuelLevel = Number(fuelLevelPercent);
+            trip.startFuelLevel = actualFuelLiters;
             await trip.save();
         } else if (type === 'CHECK_IN') {
             // Driver returns vehicle at destination depot & completes trip
@@ -90,13 +95,14 @@ exports.createHandover = async (req, res, next) => {
             vehicle.depot = trip.endDepot._id; // Vehicle transferred to destination depot
             vehicle.currentDriver = null;
             vehicle.odometer = Number(odometerReading);
-            vehicle.fuelLevel = Number(fuelLevelPercent);
+            vehicle.fuelLevel = actualFuelLiters;
+            vehicle.fuelLiters = actualFuelLiters;
             await vehicle.save();
 
             trip.status = TRIP_STATUS.COMPLETED;
             trip.endTime = new Date();
             trip.endOdometer = Number(odometerReading);
-            trip.endFuelLevel = Number(fuelLevelPercent);
+            trip.endFuelLevel = actualFuelLiters;
             await trip.save();
         }
 

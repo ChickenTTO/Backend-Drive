@@ -64,8 +64,12 @@ const VehicleSchema = new mongoose.Schema({
         default: 0
     },
     fuelLevel: {
-        type: Number, // 0 - 100%
-        default: 100
+        type: Number, // Số lít nhiên liệu (Lít)
+        default: 70
+    },
+    fuelLiters: {
+        type: Number, // Số lít nhiên liệu (Lít)
+        default: 70
     },
     currentDriver: {
         type: mongoose.Schema.Types.ObjectId,

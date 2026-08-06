@@ -66,6 +66,7 @@ const TripSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    estimatedEndTime: Date,
     endTime: Date,
     startOdometer: {
         type: Number,

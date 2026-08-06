@@ -143,7 +143,7 @@ exports.handleChat = async (req, res, next) => {
     }
 
     // Thiết lập System Instruction dựa trên phân quyền người dùng
-    let systemInstructionText = `Bạn là trợ lý ảo AI của hệ thống điều hành taxi "Smart Fleet AI". Bạn hãy trả lời bằng Tiếng Việt thân thiện, lịch sự và chuyên nghiệp.
+    let systemInstructionText = `Bạn là trợ lý ảo AI của hệ thống điều hành xe hàng Futa Express. Bạn hãy trả lời bằng Tiếng Việt thân thiện, lịch sự và chuyên nghiệp.
 Người dùng hiện tại tên là: ${user.fullName}, có vai trò là: ${user.role}.
 `;
 

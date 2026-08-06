@@ -8,20 +8,20 @@ const bookingController = require('../controllers/booking.controller');
 // All booking routes require authentication
 router.use(protect);
 
-// GET bookings (Admin, Dispatcher)
+// GET bookings (Admin, Dispatcher, Driver, Accountant)
 router.get(
   '/',
-  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
+  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER, USER_ROLES.DRIVER, USER_ROLES.ACCOUNTANT),
   bookingController.getAll
 );
 
 router.get(
   '/:id',
-  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
+  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER, USER_ROLES.DRIVER, USER_ROLES.ACCOUNTANT),
   bookingController.getById
 );
 
-// POST/PUT bookings (Admin, Dispatcher)
+// POST bookings (Admin, Dispatcher)
 router.post(
   '/',
   authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
@@ -36,7 +36,7 @@ router.put(
 
 router.put(
   '/:id/status',
-  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER),
+  authorize(USER_ROLES.ADMIN, USER_ROLES.DISPATCHER, USER_ROLES.DRIVER),
   bookingController.updateStatus
 );
 

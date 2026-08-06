@@ -47,6 +47,7 @@ exports.scanBarcode = async (req, res, next) => {
                     status: vehicle.status,
                     odometer: vehicle.odometer,
                     fuelLevel: vehicle.fuelLevel,
+                    fuelLiters: vehicle.fuelLiters || vehicle.fuelLevel,
                     depot: vehicle.depot
                 },
                 activeTrip: activeTrip || null
