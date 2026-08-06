@@ -59,12 +59,18 @@ exports.getVehicleById = async (req, res, next) => {
     }
 };
 
+const mongoose = require('mongoose');
+
 // @desc    Create new truck vehicle (Admin only)
 // @route   POST /api/vehicles
 // @access  Private/Admin
 exports.createVehicle = async (req, res, next) => {
     try {
         const { licensePlate, barcode, brand, model, year, weightCategory, maxPayloadTon, depotId, odometer, fuelLevel } = req.body;
+
+        if (!licensePlate || !barcode) {
+            return res.status(400).json({ success: false, message: 'Biển số xe và Mã vạch (Barcode) là bắt buộc' });
+        }
 
         // Check unique licensePlate or barcode
         const existingPlate = await Vehicle.findOne({ licensePlate: licensePlate.trim() });
@@ -77,24 +83,36 @@ exports.createVehicle = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Mã vạch xe (Barcode) đã bị trùng' });
         }
 
+        // Validate depot ObjectId
+        let validDepotId = depotId;
+        if (!validDepotId || !mongoose.Types.ObjectId.isValid(validDepotId)) {
+            const firstDepot = await Depot.findOne();
+            if (firstDepot) {
+                validDepotId = firstDepot._id;
+            }
+        }
+
         const vehicle = await Vehicle.create({
             licensePlate: licensePlate.trim(),
             barcode: barcode.trim().toUpperCase(),
-            brand,
-            model,
-            year: Number(year),
-            weightCategory,
-            maxPayloadTon: Number(maxPayloadTon),
-            depot: depotId,
+            brand: brand || 'Hino',
+            model: model || 'FG8JT7A',
+            year: Number(year) || new Date().getFullYear(),
+            weightCategory: weightCategory || WEIGHT_CATEGORY.MEDIUM,
+            maxPayloadTon: Number(maxPayloadTon) || 8.0,
+            depot: validDepotId,
             odometer: Number(odometer) || 0,
             fuelLevel: Number(fuelLevel) || 100,
+            fuelLiters: Number(fuelLevel) || 100,
             status: VEHICLE_STATUS.READY
         });
+
+        const populated = await Vehicle.findById(vehicle._id).populate('depot', 'name code city address');
 
         res.status(201).json({
             success: true,
             message: 'Tạo phương tiện xe tải mới thành công',
-            data: vehicle
+            data: populated
         });
     } catch (error) {
         next(error);

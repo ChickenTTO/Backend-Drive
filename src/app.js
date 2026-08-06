@@ -16,6 +16,7 @@ const adminRoutes = require('./routes/admin.routes');
 const customerRoutes = require('./routes/customer.routes');
 const driverRoutes = require('./routes/driver.routes');
 const bookingRoutes = require('./routes/booking.routes');
+const maintenanceRoutes = require('./routes/maintenance.routes');
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/drivers', driverRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
 
 // Root route
 app.get('/', (req, res) => {
