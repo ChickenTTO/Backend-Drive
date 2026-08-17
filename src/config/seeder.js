@@ -41,24 +41,72 @@ const users = [
     email: 'dispatcher1@gmail.com',
     password: 'dispatcher123',
     role: 'dispatcher',
-    fullName: 'Dispatcher User',
+    fullName: 'Dispatcher User 1',
     phone: '0901234568'
+  },
+  {
+    username: 'dispatcher2',
+    email: 'dispatcher2@gmail.com',
+    password: 'dispatcher123',
+    role: 'dispatcher',
+    fullName: 'Dispatcher User 2',
+    phone: '0901234569'
   },
   {
     username: 'accountant1',
     email: 'accountant1@gmail.com',
     password: 'accountant123',
     role: 'accountant',
-    fullName: 'Accountant User',
-    phone: '0901234569'
+    fullName: 'Accountant User 1',
+    phone: '0901234570'
+  },
+  {
+    username: 'accountant2',
+    email: 'accountant2@gmail.com',
+    password: 'accountant123',
+    role: 'accountant',
+    fullName: 'Accountant User 2',
+    phone: '0901234571'
   },
   {
     username: 'driver1',
     email: 'driver1@gmail.com',
     password: 'driver123',
     role: 'driver',
-    fullName: 'Nguyen Van A',
-    phone: '0909888777'
+    fullName: 'Nguyen Van A (Driver 1)',
+    phone: '0909888771'
+  },
+  {
+    username: 'driver2',
+    email: 'driver2@gmail.com',
+    password: 'driver123',
+    role: 'driver',
+    fullName: 'Tran Van B (Driver 2)',
+    phone: '0909888772'
+  },
+  {
+    username: 'driver3',
+    email: 'driver3@gmail.com',
+    password: 'driver123',
+    role: 'driver',
+    fullName: 'Le Van C (Driver 3)',
+    phone: '0909888773'
+  },
+  {
+    username: 'driver4',
+    email: 'driver4@gmail.com',
+    password: 'driver123',
+    role: 'driver',
+    fullName: 'Pham Van D (Driver 4)',
+    phone: '0909888774'
+  },
+  {
+    username: 'driver5',
+    email: 'driver5@gmail.com',
+    password: 'driver123',
+    role: 'driver',
+    fullName: 'Hoang Van E (Driver 5)',
+    phone: '0909888775'
   }
 ];
 
@@ -87,13 +135,10 @@ const vehicles = [
 const importData = async () => {
   try {
     await User.deleteMany();
-    await Vehicle.deleteMany();
-    await Trip.deleteMany();
     
     await User.create(users);
-    await Vehicle.create(vehicles);
 
-    console.log('✅ Data Imported Successfully!');
+    console.log('✅ Users Data Imported Successfully!');
     process.exit();
   } catch (error) {
     console.error('❌ Error Importing Data:', error);
