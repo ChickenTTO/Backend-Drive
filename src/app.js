@@ -21,26 +21,15 @@ const maintenanceRoutes = require('./routes/maintenance.routes');
 const app = express();
 
 // --- MIDDLEWARE ---
-app.use(helmet());
-
-const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://driver-git-main-chickenttos-projects.vercel.app',
-    'https://drive-git-main-chickenttos-projects.vercel.app',
-    'https://driver-kappa-eight.vercel.app'
-];
+app.use(helmet({
+    crossOriginResourcePolicy: false,
+    crossOriginEmbedderPolicy: false
+}));
 
 app.use(cors({
-    origin: function(origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(null, true); // Allow during development
-        }
-    },
-    methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
     credentials: true
 }));
 
