@@ -40,27 +40,54 @@ const seedFutaData = async () => {
         const admin = await User.create({
             username: 'admin',
             email: 'admin@futaexpress.vn',
-            password: 'password123',
+            password: 'admin123',
             fullName: 'Nguyễn Văn Quản Trị (Admin)',
             phone: '0901111111',
+            role: 'admin'
+        });
+
+        await User.create({
+            username: 'adminDat',
+            email: 'admin.dat@futaexpress.vn',
+            password: 'Dat@2005',
+            fullName: 'Admin Quốc Đạt',
+            phone: '0901111222',
             role: 'admin'
         });
 
         const dispatcher = await User.create({
             username: 'dispatcher',
             email: 'dieuhanh@futaexpress.vn',
-            password: 'password123',
+            password: 'dispatcher123',
             fullName: 'Trần Thị Điều Hành (Dispatcher)',
             phone: '0902222222',
+            role: 'dispatcher'
+        });
+
+        await User.create({
+            username: 'dispatcher1',
+            email: 'dieuhanh1@futaexpress.vn',
+            password: 'dispatcher123',
+            fullName: 'Nguyễn Điều Hành 1',
+            phone: '0902222333',
             role: 'dispatcher'
         });
 
         const accountant = await User.create({
             username: 'accountant',
             email: 'ketoan@futaexpress.vn',
-            password: 'password123',
+            password: 'accountant123',
             fullName: 'Hoàng Kim Kế Toán (Accountant)',
             phone: '0905555555',
+            role: 'accountant'
+        });
+
+        await User.create({
+            username: 'accountant1',
+            email: 'ketoan1@futaexpress.vn',
+            password: 'accountant123',
+            fullName: 'Phạm Kế Toán 1',
+            phone: '0905555666',
             role: 'accountant'
         });
 
@@ -72,7 +99,7 @@ const seedFutaData = async () => {
             const driver = await User.create({
                 username: `driver${index}`,
                 email: `taixe${index}@futaexpress.vn`,
-                password: 'password123',
+                password: 'driver123',
                 fullName: `${driverNames[i]} (Tài xế ${seqStr})`,
                 phone: `09033333${seqStr}`,
                 role: 'driver'
