@@ -19,7 +19,14 @@ const driverNames = [
   'Đặng Huy Hoàng', 'Bùi Quang Huy', 'Ngô Thành Trung', 'Hoàng Trọng Hiếu', 'Đỗ Minh Trí',
   'Nguyễn Thanh Tùng', 'Lý Văn Hùng', 'Đinh Văn Lâm', 'Trịnh Tấn Phát', 'Võ Văn Kiệt',
   'Dương Hải Đăng', 'Phan Văn Nhật', 'Huỳnh Tấn Đạt', 'Mai Quốc Tuấn', 'Cao Minh Lộc',
-  'Nguyễn Hoàng Long', 'Trương Văn Thịnh', 'Hồ Hữu Phước', 'Lâm Quốc Cường', 'Đào Văn Sang'
+  'Nguyễn Hoàng Long', 'Trương Văn Thịnh', 'Hồ Hữu Phước', 'Lâm Quốc Cường', 'Đào Văn Sang',
+  'Trần Đình Trọng', 'Nguyễn Tiến Dũng', 'Vũ Văn Thanh', 'Đỗ Duy Mạnh', 'Nguyễn Quang Hải',
+  'Phan Văn Đức', 'Nguyễn Công Phượng', 'Lương Xuân Trường', 'Nguyễn Tuấn Anh', 'Phạm Đức Huy',
+  'Hà Đức Chinh', 'Nguyễn Văn Toàn', 'Đoàn Văn Hậu', 'Hồ Tấn Tài', 'Bùi Tiến Dũng',
+  'Nguyễn Văn Hoàng', 'Trần Nguyên Mạnh', 'Đặng Văn Lâm', 'Nguyễn Thành Chung', 'Bùi Hoàng Việt Anh',
+  'Nguyễn Thanh Bình', 'Nhâm Mạnh Dũng', 'Khuất Văn Khang', 'Nguyễn Thái Sơn', 'Phan Tuấn Tài',
+  'Nguyễn Văn Tùng', 'Phạm Tuấn Hải', 'Nguyễn Hoàng Đức', 'Nguyễn Đình Bắc', 'Võ Minh Trọng',
+  'Bùi Vĩ Hào', 'Nguyễn Văn Trường', 'Nguyễn Thanh Nhàn', 'Trần Nam Hải', 'Lê Nguyên Hoàng'
 ];
 
 const seedFutaData = async () => {
@@ -91,14 +98,14 @@ const seedFutaData = async () => {
             role: 'accountant'
         });
 
-        // Create 25 Drivers
+        // Create 60 Drivers
         const createdDrivers = [];
         for (let i = 0; i < driverNames.length; i++) {
             const index = i + 1;
             const seqStr = String(index).padStart(2, '0');
             const driver = await User.create({
                 username: `driver${index}`,
-                email: `taixe${index}@futaexpress.vn`,
+                email: `taixe${seqStr}@futaexpress.vn`,
                 password: 'driver123',
                 fullName: `${driverNames[i]} (Tài xế ${seqStr})`,
                 phone: `09033333${seqStr}`,
@@ -125,7 +132,7 @@ const seedFutaData = async () => {
         }
         console.log('🏛️ Created 05 Futa Express Depots (HN, HP, DN, HCM, CT)');
 
-        // 4. Create 55 Trucks with Barcodes & Link Current Drivers
+        // 4. Create 60 Trucks with Barcodes & Link Current Drivers
         const brands = ['Hino 300', 'Isuzu NPR', 'Hyundai Mighty', 'Howo A7', 'Chenglong H7'];
         const weightCategories = [
             { category: WEIGHT_CATEGORY.LIGHT, payload: 2.5 },
@@ -138,7 +145,7 @@ const seedFutaData = async () => {
 
         for (let dIdx = 0; dIdx < createdDepots.length; dIdx++) {
             const depot = createdDepots[dIdx];
-            for (let i = 0; i < 11; i++) {
+            for (let i = 0; i < 12; i++) {
                 const seq = String(truckCount).padStart(3, '0');
                 const barcode = `FUTA-TRK-${seq}`;
                 const plateNum = Math.floor(1000 + Math.random() * 9000);
@@ -172,7 +179,7 @@ const seedFutaData = async () => {
         }
         console.log(`🚛 Created ${createdVehicles.length} Trucks with Barcodes & assigned drivers spread across 5 Depots.`);
 
-        // 5. Create Real Trips for ALL 25 Drivers
+        // 5. Create Real Trips for ALL 60 Drivers
         const customersList = [
             { name: "Công ty Lương thực FUTA Agrico", phone: "0908111222" },
             { name: "Tập đoàn Điện tử Samsung Vina", phone: "0918222333" },
@@ -259,7 +266,7 @@ const seedFutaData = async () => {
                 createdTripsList.push(trip2);
             }
         }
-        console.log(`📦 Created ${createdTripsCount} Real Trips for all 25 drivers.`);
+        console.log(`📦 Created ${createdTripsCount} Real Trips for all ${createdDrivers.length} drivers.`);
 
         // 6. Create Check-out Handovers
         for (let i = 0; i < 10; i++) {
@@ -303,7 +310,7 @@ const seedFutaData = async () => {
             });
         }
 
-        console.log('✅ Seeding completed successfully for all 25 drivers!');
+        console.log('✅ Seeding completed successfully for all 60 drivers!');
         process.exit(0);
     } catch (error) {
         console.error('❌ Seeding failed:', error);
@@ -312,5 +319,3 @@ const seedFutaData = async () => {
 };
 
 seedFutaData();
-
-
